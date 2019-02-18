@@ -2,7 +2,6 @@ package editorGUI;
 
 import javax.swing.JPanel;
 
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -28,20 +27,22 @@ import javax.swing.text.DefaultCaret;
 
 import java.awt.Color;
 
+/**
+ * @author arshdeep.dhillon1
+ *
+ */
 @SuppressWarnings("serial")
 public class EditorView extends JPanel {
 
 	private JFrame frame;
 	private JTextArea txtArea = new JTextArea();
 	private JMenuBar menu;
-	private JMenu file, exit;
-	private JMenuItem save, open;
-	
+	private JMenu file, collab;
+	private JMenuItem open, export, exit, joinDoc, shareDoc;
+
 	private JScrollPane scrollPane;
-	private String allowExtType = "txt";
-	private String descriptionOfAllow = "Plain text";
 	private JFileChooser fChooser = new JFileChooser();
-	private boolean isSave = false;
+//	private boolean isSave = false;
 
 	// setting up editor
 	public EditorView(EditorController frame) {
@@ -55,82 +56,81 @@ public class EditorView extends JPanel {
 		scrollPane = new JScrollPane(txtArea, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
-		// FileFilter allows to filter out unwanted text files when user is viewing list of files to open in the editor
-		FileFilter txtFilter = new FileNameExtensionFilter(descriptionOfAllow, allowExtType);
+		// FileFilter allows to filter out unwanted text files when user is viewing list
+		// of files to open in the editor
+		FileFilter txtFilter = new FileNameExtensionFilter("Text files", "txt");
 		fChooser.setFileFilter(txtFilter);
 
-		
 		// add components to JPanel
-		
+
 		// create a menu bar and menu items
 		menu = new JMenuBar();
-		menu.setBackground(new Color(179,205,224));
+		menu.setBackground(new Color(179, 205, 224));
 		file = new JMenu("File");
-		exit = new JMenu("Exit");
+		collab = new JMenu("Collaborate");
 
-		// create submenu items add icon to submenu item		
-//		save = new JMenuItem("Save");
-		save = new JMenuItem("Save", new ImageIcon("images/icon-save-doc-16.png"));
-
-//		open = new JMenuItem("Open File...");
+		// create sub-menu items add icon to sub-menu item
+		export = new JMenuItem("Export", new ImageIcon("images/icon-save-doc-16.png"));
 		open = new JMenuItem("Open File...", new ImageIcon("images/icon-open-doc-16.png"));
+		joinDoc = new JMenuItem("Join...", new ImageIcon("images/icon-collab-doc-16.png"));
+		shareDoc = new JMenuItem("Share...", new ImageIcon("images/icon-share-doc-16.png"));
+		exit = new JMenuItem("Exit");
 
-		// add these menu items into `File` menu
+		// add the sub-menu items into `File` menu
 		file.add(open);
-		file.add(save);
-		
+		file.addSeparator(); // this is to divide `File` sub items into sections but adding a horizontal line
+		file.add(export);
+		file.addSeparator();
+		file.add(exit);
+		collab.add(joinDoc);
+		collab.add(shareDoc);
 
-
-		// add the menu items into menu then menu to JMenuBar
+		// add the menu items into menu bar
 		menu.add(file);
-		menu.add(exit);
+		menu.add(collab);
 		this.frame.setJMenuBar(menu);
 
-		// event listener 
-		save.addActionListener(new SaveLisnr());
+		// add event listener
+		export.addActionListener(new ExportLisnr());
 		open.addActionListener(new OpenLisnr());
-		exit.addMenuListener(new ExitLisnr());
+//		exit.addMenuListener(new ExitLisnr());
+		exit.addActionListener(new ExitLisnr());
 
 		layout.setHorizontalGroup(layout.createParallelGroup().addComponent(scrollPane));
 		layout.setVerticalGroup(layout.createSequentialGroup().addComponent(scrollPane));
 	}
 
-	private class SaveLisnr implements ActionListener {
+	/**
+	 * @author arshdeep.dhillon1
+	 *
+	 */
+	private class ExportLisnr implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			saveFile();
+			exportFile();
 
 		}
 
-		private void saveFile() {
-			if (!isSave) {
-				System.out.println("IN saveFile()");
-				if (fChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
-					try {
-						FileWriter fWriter = null;
-						fWriter = new FileWriter(fChooser.getSelectedFile().getAbsoluteFile() + ".txt");
-						txtArea.write(fWriter);
-						fWriter.close();
-						isSave = true;
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+		private void exportFile() {
 
-				}
-			} else {
-				updateSavedFile();
+			try {
+				FileWriter fWriter = null;
+
+				fWriter = new FileWriter(frame.getTitle() + ".txt");
+				txtArea.write(fWriter);
+				fWriter.close();
+//						isSave = true;
+			} catch (IOException e) {
+				System.out.println("ERROE: OPEN FILE" + e.getMessage());
 			}
-			
 		}
-		private void updateSavedFile() {
-			//TODO: update the current file 
-			System.out.println("TODO: update the current file");
-			
-		}
-
 	}
 
+	/**
+	 * @author arshdeep.dhillon1
+	 *
+	 */
 	private class OpenLisnr implements ActionListener {
 
 		@Override
@@ -147,40 +147,20 @@ public class EditorView extends JPanel {
 				fReader = new FileReader(absolutePath);
 				txtArea.read(fReader, null);
 				fReader.close();
-				isSave = true;
+//				isSave = true;
+
 			} catch (IOException e) {
 //				e.printStackTrace();
 				System.out.println("ERROE: OPEN FILE" + e.getMessage());
 			}
-			
 		}
 
 	}
 
-	private class ExitLisnr implements MenuListener {
-
-		@Override
-		public void menuCanceled(MenuEvent e) {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void menuDeselected(MenuEvent e) {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void menuSelected(MenuEvent e) {
-			if (e.getSource().equals(exit)) {
-				System.exit(0);
-				
-			}
-
-		}
+	public void setTitleName(String title) {
+		frame.setTitle(title);
 	}
-	
+
 	/*
 	// add action to sub items of `File`
 	Action Open = new AbstractAction("Open File") {
@@ -280,9 +260,7 @@ public class EditorView extends JPanel {
 
 		// FileFilter allows to filter out unwanted text files when user is viewing list
 		// of files to open in the editor
-		String allowExtType = "txt";
-		String descriptionOfAllow = "Plain text";
-		FileFilter txtFilter = new FileNameExtensionFilter(descriptionOfAllow, allowExtType);
+		FileFilter txtFilter = new FileNameExtensionFilter("Text files", "txt");
 
 		fChooser.setFileFilter(txtFilter);
 
