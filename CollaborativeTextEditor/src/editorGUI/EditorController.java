@@ -4,8 +4,10 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Image;
 
+import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.text.Element;
 
 import client.Client;
 
@@ -59,11 +61,13 @@ public class EditorController extends JFrame {
 		setVisible(true);
 	}
 
+	
 	/**
 	 * Create the frame.
 	 * 
 	 * @param client
 	 */
+	/*
 	public EditorController(Client client) {
 		super("TypeIt");
 		uuid = UUID.randomUUID();
@@ -83,7 +87,9 @@ public class EditorController extends JFrame {
 		this.client = client;
 		setVisible(true);
 	}
-
+	*/
+	
+	
 	/**
 	 * 
 	 */
@@ -108,5 +114,31 @@ public class EditorController extends JFrame {
 
 	public void setUUID() {
 		client.setUUID(uuid);
-	}	
+	}
+
+	public void RenameDoc() {
+		String title = JOptionPane.showInputDialog(null, "New Name", "Not Valid Name", JOptionPane.PLAIN_MESSAGE);
+		if (title != null) {
+			while (title.trim().length() < 1) {
+				title = JOptionPane.showInputDialog(null, "New Name", "Not Valid Name", JOptionPane.ERROR_MESSAGE);
+			}
+			gui.setTitleName(title);
+			//TODO: notify server about this change   
+		}
+	}
+
+	public void caretListener(JEditorPane editorPane) {
+		Element map = editorPane.getDocument().getDefaultRootElement();
+		
+		int posRelativeToOrigin = editorPane.getCaretPosition();
+		int row = map.getElementIndex(posRelativeToOrigin);
+		Element lineElem = map.getElement(row);
+		
+		int rowOffSet = lineElem.getStartOffset();		
+		int col = posRelativeToOrigin - rowOffSet;
+		
+		System.out.println(posRelativeToOrigin + " , "+ rowOffSet);
+		//TODO: send latest caret position to the server
+		System.out.format("Row:%s  Col:%s\n", row, col);
+	}
 }

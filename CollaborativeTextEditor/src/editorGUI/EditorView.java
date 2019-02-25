@@ -11,6 +11,7 @@ import java.io.IOException;
 
 import javax.swing.GroupLayout;
 import javax.swing.ImageIcon;
+import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -19,6 +20,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.DefaultCaret;
@@ -38,10 +41,11 @@ import java.awt.datatransfer.StringSelection;
 public class EditorView extends JPanel {
 
 	private JFrame frame;
-	private JTextArea txtArea = new JTextArea();
+//	private JTextArea txtArea = new JTextArea();
+	private JEditorPane editorPane = new JEditorPane();
 	private JMenuBar menu;
 	private JMenu file, collab;
-	private JMenuItem open, export, exit, joinDoc, shareDoc;
+	private JMenuItem open, export, exit, joinDoc, shareDoc,rename;
 
 	private JScrollPane scrollPane;
 	private JFileChooser fChooser = new JFileChooser();
@@ -57,9 +61,10 @@ public class EditorView extends JPanel {
 		setLayout(layout);
 
 		// setting up side scrollpane to add scroll bars
-		scrollPane = new JScrollPane(txtArea, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+		scrollPane = new JScrollPane(editorPane, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-
+		
+		
 		// FileFilter allows to filter out unwanted text files when user is viewing list
 		// of files to open in the editor
 		FileFilter txtFilter = new FileNameExtensionFilter("Text files", "txt");
@@ -79,13 +84,16 @@ public class EditorView extends JPanel {
 		joinDoc = new JMenuItem("Join...", new ImageIcon("images/icon-collab-doc-16.png"));
 		shareDoc = new JMenuItem("Share", new ImageIcon("images/icon-share-doc-16.png"));
 		exit = new JMenuItem("Exit");
-
+		rename = new JMenuItem("Rename...",new ImageIcon("images/icons-rename-16.png"));
+		
 		// add the sub-menu items into `File` menu
 		file.add(open);
+		file.add(rename);
 		file.addSeparator(); // this is to divide `File` sub items into sections but adding a horizontal line
 		file.add(export);
 		file.addSeparator();
 		file.add(exit);
+		
 		collab.add(joinDoc);
 		collab.add(shareDoc);
 
@@ -98,6 +106,21 @@ public class EditorView extends JPanel {
 		export.addActionListener(new ExportLisnr());
 		open.addActionListener(new OpenLisnr());
 		exit.addActionListener(new ExitLisnr());
+		rename.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (frame != null)
+					frame.RenameDoc();
+			}});
+		
+		editorPane.addCaretListener(new CaretListener() {
+			
+			@Override
+			public void caretUpdate(CaretEvent e) {
+				frame.caretListener(editorPane);	
+			}
+		});
+		
 		
 		//TODO: add joinDoc event, not sure if view should be doing this
 		
@@ -118,6 +141,8 @@ public class EditorView extends JPanel {
 
 	}
 
+	
+
 	private class ExportLisnr implements ActionListener {
 
 		@Override
@@ -131,7 +156,7 @@ public class EditorView extends JPanel {
 				FileWriter fWriter = null;
 
 				fWriter = new FileWriter(frame.getTitle() + ".txt");
-				txtArea.write(fWriter);
+				editorPane.write(fWriter);
 				fWriter.close();
 			} catch (IOException e) {
 				System.out.println("ERROE: OPEN FILE" + e.getMessage());
@@ -150,18 +175,20 @@ public class EditorView extends JPanel {
 		}
 
 		private void openFile(String absolutePath) {
-			// TODO: show client's files that are on the server  
+			// TODO: show client's files that are on the server
 
-			try {
-				FileReader fReader = null;
-				fReader = new FileReader(absolutePath);
-				txtArea.read(fReader, null);
-				fReader.close();
-				String fileName = new File(absolutePath).getName().split("\\.(?=[^\\.]+$)")[0];
-				setTitleName(fileName);
-			} catch (IOException e) {
+			if (frame != null) {
+				try {
+					FileReader fReader = null;
+					fReader = new FileReader(absolutePath);
+					editorPane.read(fReader, null);
+					fReader.close();
+					String fileName = new File(absolutePath).getName().split("\\.(?=[^\\.]+$)")[0];
+					setTitleName(fileName);
+				} catch (IOException e) {
 //				e.printStackTrace();
-				System.out.println("ERROE: OPEN FILE" + e.getMessage());
+					System.out.println("ERROE: OPEN FILE" + e.getMessage());
+				}
 			}
 		}
 
