@@ -35,8 +35,8 @@ public class EditorController extends JFrame {
 
 	private EditorView gui;
 
-	final UUID uuid;
-
+	final UUID CLIENT_UUID;
+	final UUID DOC_UUID;
 	private Client client;
 
 	/**
@@ -44,7 +44,8 @@ public class EditorController extends JFrame {
 	 */
 	public EditorController() {
 		super("TypeIt");
-		uuid = UUID.randomUUID();
+		CLIENT_UUID = UUID.randomUUID();
+		DOC_UUID = UUID.randomUUID();
 		setIconImage(Toolkit.getDefaultToolkit().getImage("images/icon-logo-16.png"));
 		setBackground(Color.WHITE);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -57,20 +58,19 @@ public class EditorController extends JFrame {
 		this.setBackground(new Color(100, 151, 177));
 		setDefaultDocName();
 
-		
 		setVisible(true);
 	}
 
-	
 	/**
 	 * Create the frame.
 	 * 
 	 * @param client
 	 */
-	/*
+
 	public EditorController(Client client) {
 		super("TypeIt");
-		uuid = UUID.randomUUID();
+		CLIENT_UUID = UUID.randomUUID();
+		DOC_UUID = UUID.randomUUID();
 		setIconImage(Toolkit.getDefaultToolkit().getImage("images/icon-logo-16.png"));
 		setBackground(Color.WHITE);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -83,13 +83,10 @@ public class EditorController extends JFrame {
 		this.setBackground(new Color(100, 151, 177));
 		setDefaultDocName();
 
-
 		this.client = client;
 		setVisible(true);
 	}
-	*/
-	
-	
+
 	/**
 	 * 
 	 */
@@ -109,11 +106,11 @@ public class EditorController extends JFrame {
 	}
 
 	public String getDocID() {
-		return uuid.toString();
+		return DOC_UUID.toString();
 	}
 
-	public void setUUID() {
-		client.setUUID(uuid);
+	public void setClientUUID() {
+		client.setUUID(CLIENT_UUID);
 	}
 
 	public void RenameDoc() {
@@ -123,22 +120,68 @@ public class EditorController extends JFrame {
 				title = JOptionPane.showInputDialog(null, "New Name", "Not Valid Name", JOptionPane.ERROR_MESSAGE);
 			}
 			gui.setTitleName(title);
-			//TODO: notify server about this change   
+			// TODO: notify server about this change
 		}
 	}
 
-	public void caretListener(JEditorPane editorPane) {
-		Element map = editorPane.getDocument().getDefaultRootElement();
-		
-		int posRelativeToOrigin = editorPane.getCaretPosition();
-		int row = map.getElementIndex(posRelativeToOrigin);
-		Element lineElem = map.getElement(row);
-		
-		int rowOffSet = lineElem.getStartOffset();		
-		int col = posRelativeToOrigin - rowOffSet;
-		
-		System.out.println(posRelativeToOrigin + " , "+ rowOffSet);
-		//TODO: send latest caret position to the server
-		System.out.format("Row:%s  Col:%s\n", row, col);
+
+
+	/**
+	 * This is to get the Document ID from the client. Which then sends a request to
+	 * the server on behalf of the client.
+	 */
+	public void getJoinDocID() {
+		// TODO: send a `get document` (or some type of get doc protocol) request to the
+		// server, which should then send the text that contains within that document to
+		// that client.
+
+		String collabDocID = null;
+
+		boolean forEver = true;
+		while (forEver) {
+			collabDocID = JOptionPane.showInputDialog(null, "Document ID", "Must Enter A Document ID",JOptionPane.PLAIN_MESSAGE);
+
+			// if client didnt close the dialog window
+			if (collabDocID != null) {
+
+				if (collabDocID.trim().length() < 1) {
+					JOptionPane.showMessageDialog(null, "Empty Document ID", "Error", JOptionPane.ERROR_MESSAGE);
+				}
+
+				// TODO: Update this call when client-server protocol is finalized
+
+				// Example call to the server
+				// if a client entered an invalid link
+				//else if (!client.checkDocExist(collabDocID)) {
+					//JOptionPane.showMessageDialog(null, "Document ID Does Not Exist", "Error",JOptionPane.ERROR_MESSAGE);
+				//} 
+				
+				else {
+					// otherwise join document
+					JoinDoc(collabDocID);
+					forEver = false;
+				}
+			} else {
+				// dialog window closed by client
+				forEver = false;
+			}
+		}
 	}
+
+	/**
+	 * Given an ID of the document to join, JoinDoc send a `JOIN` action to the server. 
+	 * @param docIDToJoin - ID of the document you wish to join. 
+	 */
+	private void JoinDoc(String docIDToJoin) {
+		// TODO: Update this when client-server is finalized
+
+		String action = String.format("{\"action\": \"JOIN\",\"file_id\": \"%s\"}", docIDToJoin);
+		if (client != null) {
+			client.sentMssgToServer(action);
+		} else {
+			System.out.println("IN " + this.getClass().getName() + ": client null");
+			System.out.println("\t action: " + action);
+		}
+	}
+	
 }

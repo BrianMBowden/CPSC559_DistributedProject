@@ -1,6 +1,8 @@
-package editorGUI;
+package client;
 
 import javax.swing.SwingUtilities;
+
+import editorGUI.EditorController;
 
 /**
  * Client stub 
