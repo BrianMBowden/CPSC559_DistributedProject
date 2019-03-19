@@ -1,3 +1,23 @@
+/* =============================================================================
+ * dsServer.java
+ * =============================================================================
+ * Author: Brian Bowden
+ * Date: February 2019
+ * =============================================================================
+ * A simple multi-threaded server designed for a distributed system
+ *
+ * from the project directory "ServerCLient" compile with:
+ * >javac -d ./bin/dsServer/ ./src/dsServer/Server.java
+ *
+ * from the bin folder in the project directory, run with:
+ * >java dsServer.Server [debug mode]
+ * 					to run with debugging enabled, debug mode is an integer
+  * 				to run with debugging disabled, no integer needs to be provided
+ * =============================================================================
+ *
+*/
+
+
 package dsServer;
 
 import java.net.*;
@@ -10,48 +30,43 @@ public class Server{
 	private boolean shutdown;
 	private int clientCount;
 	private boolean debug;
-	
-	public Server(int port, boolean db) throws IOException {
-		
+
+	private static int PORT = 6666;
+
+	public Server(boolean db) throws IOException {
+
 		this.debug = db;
 		clientCount = 0;
 		shutdown = false;
-		
+
 		try {
-			serveSock = new ServerSocket(port);
+			serveSock = new ServerSocket(PORT);
 			if (debug){
-				System.out.println("Server started on port: " + port);
+				System.out.println("Server started on port: " + PORT);
 			}
-		} 
+		}
 		catch (IOException e){
 			System.out.println("Could not create Server socket");
 			throw new IOException();
 		}
 		serverThreads = new Vector <DSServerThread> (0,1);
 	}
-	
+
 	public static void main(String [] args){
-		
+
 		Server server;
-		
-		if (args.length != 2){
-			System.out.println("<Usage> Java Server Port Number");
+		boolean db = false;
+
+		if (args.length != 0){
 			System.out.println("<Usage> Debug Mode");
+			db = true;
 		}
-		
+
 		try {
 			// arg[0] is port number
 			// arg[1] is debug mode
-			server = new Server(Integer.parseInt(args[0]), (Integer.parseInt(args[1]) != 0));			
+			server = new Server(db);
 			server.listen();
-		} 
-		catch (ArrayIndexOutOfBoundsException e){
-			System.out.println("<Usage> Java Server Port Number");
-			System.out.println("<Usage> Argument does not provide a port number");
-		}
-		catch (NumberFormatException e) {
-			System.out.println("<Usage> Java Server Port Number");
-			System.out.println("<Usage> Argument does not provide a port number");
 		}
 		catch (IOException e){
 			System.out.println("Failed to create Socket");
@@ -59,16 +74,16 @@ public class Server{
 			System.out.println("System will exit");
 			return;
 		}
-		
-		
-		
+
+
+
 	}
-	
+
 	private void listen(){
 		@SuppressWarnings("resource")
 		Socket client = new Socket();
 		DSServerThread DSthread;
-		
+
 		while(!shutdown){
 			try {
 				client = serveSock.accept();
@@ -95,12 +110,12 @@ public class Server{
 		}
 		return;
 	}
-	
+
 	public void kill (DSServerThread DSS){
 		if (debug){
 			System.out.println("Killing Client" + DSS.getID());
 		}
-		
+
 		// find the thread in the vector and remove it
 		for (int i = 0; i < serverThreads.size(); i++){
 			if (serverThreads.elementAt(i) == DSS){
@@ -108,7 +123,7 @@ public class Server{
 			}
 		}
 	}
-	
+
 	public void killAll (){
 		shutdown = true;
 		System.out.println("server shutting down");

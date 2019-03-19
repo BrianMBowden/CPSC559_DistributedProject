@@ -1,3 +1,24 @@
+/* =============================================================================
+ * dsClient.java
+ * =============================================================================
+ * Author: Brian Bowden
+ * Date: February 2019
+ * =============================================================================
+ * A simple Client program to be extended up opun later
+ *
+ * from the project directory "ServerCLient" compile with:
+ * >javac -d ./bin/dsClient/ ./src/dsClient/Client.java
+ *
+ * from the project bin directory, run with:
+ * >java dsClient.Client [debug mode]
+ * 				to run with debugging enabled, debug mode is an integer
+ * 				to run with debugging disabled, no integer needs to be provided
+ *
+ *
+ * =============================================================================
+ *
+*/
+
 package dsClient;
 
 import java.io.*;
@@ -5,66 +26,63 @@ import java.net.*;
 
 public class Client {
 	private Socket sock;
-	private String ipAddress;
 	private String userInput;
 	private BufferedReader stdIn;
 	private DataInputStream in;
 	private DataOutputStream out;
 	private boolean debug;
-	
-	public Client(String ip, int p, boolean d) throws IOException, UnknownHostException{
+
+	private static String IP_ADDRESS = "127.0.0.1";
+	private static int PORT = 6666;
+
+	public Client(boolean d) throws IOException, UnknownHostException{
 		debug = d;
-		ipAddress = ip;
-		try {
-			sock = new Socket(InetAddress.getByName(ipAddress), p);
-		} catch (UnknownHostException e) {
-			System.out.println("<Usage> Java Client");
-			System.out.println("Invalid hostname");
-			throw e;
-		} catch (IOException i) {
-			System.out.println("Could not connect to " + ipAddress);
-			throw i;
-		}
 		setStdIn(new BufferedReader(new InputStreamReader(System.in)));
-		
 	}
-	
+
 	public static void main (String[] args){
-		
+
 		Client client;
-		
-		if (args.length != 3){
-			System.out.println("<Usage> Java Client Hostname Port Number");
-			System.out.println("Hostname is a string Identifying your Server");
-			System.out.println("Port is a Postive Integer Identifying the Port to Connect to the Server");
-			System.out.println("<Usage> Debug Mode?");
-			return;
+		boolean d = false;
+		if (args.length == 1){
+			d = true;
 		}
-		
+
 		try {
-			// args[0]
-			// args[1]
-			// args[2]
-			client = new Client(args[0], Integer.parseInt(args[1]), (Integer.parseInt(args[2]) != 0));
+			client = new Client(d);
+			client.connect();
 			client.run();
 		} catch (IOException e) {
 			return;
 		}
 	}
-	
+
+	private void connect() throws IOException, UnknownHostException {
+		try {
+			sock = new Socket(InetAddress.getByName(IP_ADDRESS), PORT);
+		} catch (UnknownHostException e) {
+			System.out.println("<Usage> Java Client");
+			System.out.println("Invalid hostname");
+			throw e;
+		} catch (IOException i) {
+			System.out.println("Could not connect to " + IP_ADDRESS);
+			throw i;
+		}
+	}
+
 	private void run(){
-		
+
 		if (debug){
 			System.out.println("Connected to: " + sock.getInetAddress().getHostAddress() + " on Port " + sock.getPort() );
 		}
-		
+
 		try {
 			setOut(new DataOutputStream(sock.getOutputStream()));
 		} catch (IOException e) {
 			System.out.println("Could not create output stream. ");
 			return;
 		}
-		
+
 		try {
 			setIn(new DataInputStream(sock.getInputStream()));
 		} catch (UnknownHostException e) {
@@ -74,14 +92,14 @@ public class Client {
 			System.out.println("Could not create input stream. ");
 			return;
 		}
-		
+
 		try {
 			System.out.println(in.readUTF());
 		} catch (IOException e) {
 			System.out.println("Could not perform read");
 			return;
 		}
-		
+
 		while(true){
 			try {
 				setUserInput(stdIn.readLine());
@@ -94,7 +112,7 @@ public class Client {
 						System.out.println("Socket unable to close... exiting anyway");
 						System.exit(0);
 					}
-					
+
 				}
 				else if (userInput.equals("kill")){
 					try {
@@ -116,9 +134,9 @@ public class Client {
 				continue;
 			}
 		}
-				
+
 	}
-	
+
 	private void setIn(DataInputStream dIn)    { this.in = dIn; }
 	private void setOut(DataOutputStream dOut) { this.out = dOut; }
 	private void setStdIn(BufferedReader bR)   { this.stdIn = bR; }

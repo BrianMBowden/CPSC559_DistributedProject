@@ -1,3 +1,4 @@
+
 package dsServer;
 
 import java.io.IOException;
@@ -9,7 +10,7 @@ public class DSServerThread extends Thread {
 	private DSThreadData data;
 	private int idNum;
 	private boolean debug;
-	
+
 	public DSServerThread (Socket s, Server p, int i, boolean d){
 		sock = s;
 		parent = p;
@@ -17,10 +18,10 @@ public class DSServerThread extends Thread {
 		debug = d;
 		data = null;
 	}
-	
+
 	public int getID() { return idNum; }
 	public Socket getSocket(){ return sock; }
-	
+
 	public void run(){
 		//this is where we do stuff
 		try {
@@ -29,17 +30,17 @@ public class DSServerThread extends Thread {
 			System.out.println("Data Stream not verified");
 			parent.kill(this);
 		}
-		
+
 		try {
 			data.getOut().writeUTF("Hello Client");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		if (debug){
 			System.out.println("Waiting for user...");
 		}
-		
+
 		while (true){
 			try {
 				int expected;
@@ -64,5 +65,5 @@ public class DSServerThread extends Thread {
 		}
 
 	}
-	
+
 }
