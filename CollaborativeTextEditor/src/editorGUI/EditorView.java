@@ -42,7 +42,8 @@ import java.awt.datatransfer.StringSelection;
  *
  */
 @SuppressWarnings("serial")
-public class EditorView extends JPanel {
+public class EditorView extends JPanel
+{
 
 	private JFrame frame;
 //	private JTextArea txtArea = new JTextArea();
@@ -56,7 +57,8 @@ public class EditorView extends JPanel {
 	private final String UUID;
 
 	// setting up editor
-	public EditorView(EditorController frame) {
+	public EditorView(EditorController frame)
+	{
 		UUID = frame.getDocID();
 		this.frame = frame;
 
@@ -109,16 +111,20 @@ public class EditorView extends JPanel {
 		export.addActionListener(new ExportLisnr());
 		open.addActionListener(new OpenLisnr());
 		exit.addActionListener(new ExitLisnr());
-		rename.addActionListener(new ActionListener() {
+		rename.addActionListener(new ActionListener()
+		{
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(ActionEvent e)
+			{
 				frame.RenameDoc();
 			}
 		});
 
-		joinDoc.addActionListener(new ActionListener() {
+		joinDoc.addActionListener(new ActionListener()
+		{
 			@Override
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(ActionEvent e)
+			{
 				frame.getJoinDocID();
 			}
 		});
@@ -132,37 +138,48 @@ public class EditorView extends JPanel {
 	}
 
 	// TODO: add the ability to send changes to the server
-	private class DocListener implements DocumentListener {
+	private class DocListener implements DocumentListener
+	{
 
 		@Override
-		public void removeUpdate(DocumentEvent docE) {
+		public void removeUpdate(DocumentEvent docE)
+		{
 			System.out.println("IN " + this.getClass().getName());
-			System.out.println("\tEvent: removeUpdate[" + "offset:" + docE.getOffset() + ",len:" + docE.getLength()+ "], send update to server");
+			System.out.println("\tEvent: removeUpdate[" + "offset:" + docE.getOffset() + ",len:" + docE.getLength()
+					+ "], send update to server");
 		}
 
 		@Override
-		public void insertUpdate(DocumentEvent docE) {
+		public void insertUpdate(DocumentEvent docE)
+		{
 			System.out.println("IN " + this.getClass().getName());
-			try {
-				System.out.println("\tEvent: insertUpdate[" + editorPane.getDocument().getText(docE.getOffset(),docE.getLength())+ "], send update to server");
-				
-			} catch (BadLocationException e1) {
+			try
+			{
+				System.out.println(
+						"\tEvent: insertUpdate[" + editorPane.getDocument().getText(docE.getOffset(), docE.getLength())
+								+ "], send update to server");
+
+			} catch (BadLocationException e1)
+			{
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 		}
 
 		@Override
-		public void changedUpdate(DocumentEvent e) {
-			//Plain text components don't fire these events
+		public void changedUpdate(DocumentEvent e)
+		{
+			// Plain text components don't fire these events
 		}
 
 	}
 
-	private class ShareLisnr implements ActionListener {
+	private class ShareLisnr implements ActionListener
+	{
 
 		@Override
-		public void actionPerformed(ActionEvent arg0) {
+		public void actionPerformed(ActionEvent arg0)
+		{
 			StringSelection stringSelection = new StringSelection(UUID);
 			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 			clipboard.setContents(stringSelection, null);
@@ -171,16 +188,19 @@ public class EditorView extends JPanel {
 
 	}
 
-	private class CursorListener implements CaretListener {
+	private class CursorListener implements CaretListener
+	{
 
 		private JEditorPane editorPane;
 
-		public CursorListener(JEditorPane editorPane) {
+		public CursorListener(JEditorPane editorPane)
+		{
 			this.editorPane = editorPane;
 		}
 
 		@Override
-		public void caretUpdate(CaretEvent e) {
+		public void caretUpdate(CaretEvent e)
+		{
 			Element map = editorPane.getDocument().getDefaultRootElement();
 
 			int posRelativeToOrigin = editorPane.getCaretPosition();
@@ -190,8 +210,6 @@ public class EditorView extends JPanel {
 			int rowOffSet = lineElem.getStartOffset();
 			int col = posRelativeToOrigin - rowOffSet;
 
-			
-			
 			// TODO: send latest caret position to the server
 //			System.out.println("IN " + this.getClass().getName());
 //			System.out.println("\t" + posRelativeToOrigin + " , " + rowOffSet);
@@ -199,49 +217,61 @@ public class EditorView extends JPanel {
 		}
 	}
 
-	private class ExportLisnr implements ActionListener {
+	private class ExportLisnr implements ActionListener
+	{
 
 		@Override
-		public void actionPerformed(ActionEvent e) {
+		public void actionPerformed(ActionEvent e)
+		{
 			exportFile();
 		}
 
-		private void exportFile() {
+		private void exportFile()
+		{
 
-			try {
+			try
+			{
 				FileWriter fWriter = null;
 
 				fWriter = new FileWriter(frame.getTitle() + ".txt");
 				editorPane.write(fWriter);
 				fWriter.close();
-			} catch (IOException e) {
+			} catch (IOException e)
+			{
 				System.out.println("ERROE: OPEN FILE" + e.getMessage());
 			}
 		}
 	}
 
-	private class OpenLisnr implements ActionListener {
+	private class OpenLisnr implements ActionListener
+	{
 
 		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			if (fChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+		public void actionPerformed(ActionEvent arg0)
+		{
+			if (fChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
+			{
 				openFile(fChooser.getSelectedFile().getAbsolutePath());
 			}
 
 		}
 
-		private void openFile(String absolutePath) {
+		private void openFile(String absolutePath)
+		{
 			// TODO: show client's files that are on the server
 
-			if (frame != null) {
-				try {
+			if (frame != null)
+			{
+				try
+				{
 					FileReader fReader = null;
 					fReader = new FileReader(absolutePath);
 					editorPane.read(fReader, null);
 					fReader.close();
 					String fileName = new File(absolutePath).getName().split("\\.(?=[^\\.]+$)")[0];
 					setTitleName(fileName);
-				} catch (IOException e) {
+				} catch (IOException e)
+				{
 //				e.printStackTrace();
 					System.out.println("ERROE: OPEN FILE" + e.getMessage());
 				}
@@ -250,8 +280,10 @@ public class EditorView extends JPanel {
 
 	}
 
-	public void setTitleName(String title) {
-		if (frame != null) {
+	public void setTitleName(String title)
+	{
+		if (frame != null)
+		{
 			frame.setTitle(title);
 		}
 	}
