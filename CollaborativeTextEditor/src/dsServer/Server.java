@@ -20,9 +20,15 @@
 
 package dsServer;
 
-import java.net.*;
-import java.util.Vector;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Vector;
 
 public class Server{
 	private ServerSocket serveSock;
@@ -56,10 +62,21 @@ public class Server{
 
 		Server server;
 		boolean db = false;
-
+		File fp = new File("./../../testfile.txt");
+		FileReader fReader;
+		FileWriter fWriter;
+		
 		if (args.length != 0){
 			System.out.println("<Usage> Debug Mode");
 			db = true;
+		}
+		
+		try {
+			//TODO: implement file read/write from server thread
+			fWriter = new FileWriter(fp);
+			fReader = new FileReader(fp);
+		} catch (IOException e1) {
+			e1.printStackTrace();
 		}
 
 		try {
