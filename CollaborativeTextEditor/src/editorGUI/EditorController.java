@@ -11,7 +11,7 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.Element;
 
-import client.Client;
+//import client.Client;
 
 import java.awt.Color;
 import java.awt.Toolkit;
@@ -21,7 +21,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.UUID;
 import java.awt.Rectangle;
-
+import dsClient.*;
 /**
  * This class handles input from the client and renders the appropriate view by
  * updating the Model.
@@ -105,6 +105,10 @@ public class EditorController extends JFrame
 	/**
 	 * To set a default name of a text document.
 	 */
+	public void setClient(Client client){
+		this.client = client;
+	}
+	
 	private void setDefaultDocName()
 	{
 		this.setTitle("Untitled document");
@@ -130,6 +134,10 @@ public class EditorController extends JFrame
 	public void setClientUUID()
 	{
 		client.setUUID(CLIENT_UUID);
+	}
+	
+	public void setEditorToClient(){
+		client.setEditorController(this);
 	}
 
 	/**
@@ -232,7 +240,7 @@ public class EditorController extends JFrame
 		// for now i will just switch to editor view
 
 		setVisible(false);
-		
+		setEditorToClient();
 		//remove the login panel
 		parentPanel.remove(logInGUI);
 

@@ -21,8 +21,17 @@
 
 package dsClient;
 
-import java.io.*;
-import java.net.*;
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.UUID;
+
+import editorGUI.EditorController;
 
 public class Client {
 	private Socket sock;
@@ -31,6 +40,11 @@ public class Client {
 	private DataInputStream in;
 	private DataOutputStream out;
 	private boolean debug;
+	private UUID clientUUID;
+	private String password;
+	private String clientName;
+	
+	private EditorController editC;
 
 	private static String IP_ADDRESS = "127.0.0.1";
 	private static int PORT = 6666;
@@ -38,7 +52,18 @@ public class Client {
 	public Client(boolean d) throws IOException, UnknownHostException{
 		debug = d;
 		setStdIn(new BufferedReader(new InputStreamReader(System.in)));
+		editC = new EditorController();
+		editC.setClient(this);
+		editC.setVisible(true);
 	}
+	
+	public void setUUID(UUID clientUUID){this.clientUUID = clientUUID;}
+	public void setPassword(String password){this.password = password;}
+	public void setName(String name){this.clientName = name;}
+	public String getName(){return this.clientName;}
+	public String getPassword(){return this.password;}
+	public EditorController getEditorController(){return this.editC;}
+	public void setEditorController(EditorController editor){this.editC = editor;}
 
 /*	public static void main (String[] args){
 
@@ -135,6 +160,10 @@ public class Client {
 			}
 		}
 
+	}
+	
+	public void sentMssgToServer(String message){
+		
 	}
 
 	private void setIn(DataInputStream dIn)    { this.in = dIn; }

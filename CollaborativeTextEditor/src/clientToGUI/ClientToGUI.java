@@ -11,8 +11,6 @@ public class ClientToGUI {
 		
 		try {
 			Client client = new Client(true);
-			EditorController editC = new EditorController();
-			editC.setVisible(true);
 			client.connect();
 			client.run();
 		} catch (IOException e) {
