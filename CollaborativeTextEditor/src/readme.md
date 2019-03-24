@@ -26,7 +26,7 @@
 ```
 
 * Then Server -> Client 
-
+```json
 {
 	"action": "insert",
 	"client_id": "321F4",
