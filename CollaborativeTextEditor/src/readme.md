@@ -5,8 +5,8 @@
 {
 	"action": "insert",
 	"client_id": "321F4",
-	"document_id": "A1C4G4"
-	"payload": 
+	"document_id": "A1C4G4",
+	"payload":
 	{
 	    "data_type": "text",
 	    "offset": 0,
@@ -23,13 +23,14 @@
 	"action": "showall",
 	"client_id": "321F4"
 }
+```
 
 * Then Server -> Client 
 
 {
 	"action": "insert",
 	"client_id": "321F4",
-	"payload": 
+	"payload":
 	{
 	    "data_type": "text",
 	    "offset": 0,
@@ -46,8 +47,8 @@
 {
 	"action": "delete",
 	"client_id": "321F4",
-	"document_id": "A1C4G4"
-	"payload": 
+	"document_id": "A1C4G4",
+	"payload":
 	{
 	    "type": "text",
 	    "offset": 0,
@@ -61,8 +62,8 @@
 {
 	"action": "insert",
 	"client_id": "321F4",
-	"document_id": "A1C4G4"
-	"payload": 
+	"document_id": "A1C4G4",
+	"payload":
 	{
 	    "data_type": "caret",
 	    "row": 0,
