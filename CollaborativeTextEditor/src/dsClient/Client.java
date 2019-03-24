@@ -125,6 +125,7 @@ public class Client {
 			return;
 		}
 
+		//TODO: sending messages to server from here in client
 		while(true){
 			try {
 				setUserInput(stdIn.readLine());
@@ -163,7 +164,12 @@ public class Client {
 	}
 	
 	public void sentMssgToServer(String message){
-		
+		try {
+			out.writeUTF(message);
+		} catch (IOException e) {
+			// TODO implement this with json Strings
+			e.printStackTrace();
+		}
 	}
 
 	private void setIn(DataInputStream dIn)    { this.in = dIn; }

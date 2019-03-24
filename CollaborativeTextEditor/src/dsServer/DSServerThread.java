@@ -40,7 +40,8 @@ public class DSServerThread extends Thread {
 		if (debug){
 			System.out.println("Waiting for user...");
 		}
-
+		
+		//TODO: listen for input from client (json packets)
 		while (true){
 			try {
 				int expected;
