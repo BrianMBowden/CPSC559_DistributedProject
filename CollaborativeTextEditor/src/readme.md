@@ -70,5 +70,13 @@
 	    "column": 4
 	}
 }
+```
 
+#### Join Document
+```json
+{
+	"action": "join",
+	"client_id": "321F4",
+	"document_id": "A1C4G4"
+}
 ```
