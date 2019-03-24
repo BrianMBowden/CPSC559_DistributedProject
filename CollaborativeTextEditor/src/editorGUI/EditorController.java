@@ -73,7 +73,7 @@ public class EditorController extends JFrame
 		pack();
 		
 		setLocationRelativeTo(null);
-		setVisible(true);
+		//setVisible(true);
 	}
 
 	/**

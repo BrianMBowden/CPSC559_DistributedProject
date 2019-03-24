@@ -40,7 +40,7 @@ public class Client {
 		setStdIn(new BufferedReader(new InputStreamReader(System.in)));
 	}
 
-	public static void main (String[] args){
+/*	public static void main (String[] args){
 
 		Client client;
 		boolean d = false;
@@ -55,9 +55,9 @@ public class Client {
 		} catch (IOException e) {
 			return;
 		}
-	}
+	}*/
 
-	private void connect() throws IOException, UnknownHostException {
+	public void connect() throws IOException, UnknownHostException {
 		try {
 			sock = new Socket(InetAddress.getByName(IP_ADDRESS), PORT);
 		} catch (UnknownHostException e) {
@@ -70,7 +70,7 @@ public class Client {
 		}
 	}
 
-	private void run(){
+	public void run(){
 
 		if (debug){
 			System.out.println("Connected to: " + sock.getInetAddress().getHostAddress() + " on Port " + sock.getPort() );
