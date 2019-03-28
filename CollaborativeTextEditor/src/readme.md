@@ -80,3 +80,13 @@
 	"document_id": "A1C4G4"
 }
 ```
+
+#### Rename Document
+```json
+{
+	"action": "rename",
+	"client_id": "321F4",
+	"document_id": "A1C4G4",
+	"new_doc_name": "Notes"
+}
+```
