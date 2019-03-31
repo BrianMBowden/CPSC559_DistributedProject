@@ -5,8 +5,8 @@
 {
 	"action": "insert",
 	"client_id": "321F4",
-	"document_id": "A1C4G4"
-	"payload": 
+	"document_id": "A1C4G4",
+	"payload":
 	{
 	    "data_type": "text",
 	    "offset": 0,
@@ -23,13 +23,14 @@
 	"action": "showall",
 	"client_id": "321F4"
 }
+```
 
 * Then Server -> Client 
-
+```json
 {
 	"action": "insert",
 	"client_id": "321F4",
-	"payload": 
+	"payload":
 	{
 	    "data_type": "text",
 	    "offset": 0,
@@ -46,8 +47,8 @@
 {
 	"action": "delete",
 	"client_id": "321F4",
-	"document_id": "A1C4G4"
-	"payload": 
+	"document_id": "A1C4G4",
+	"payload":
 	{
 	    "type": "text",
 	    "offset": 0,
@@ -61,13 +62,31 @@
 {
 	"action": "insert",
 	"client_id": "321F4",
-	"document_id": "A1C4G4"
-	"payload": 
+	"document_id": "A1C4G4",
+	"payload":
 	{
 	    "data_type": "caret",
 	    "row": 0,
 	    "column": 4
 	}
 }
+```
 
+#### Join Document
+```json
+{
+	"action": "join",
+	"client_id": "321F4",
+	"document_id": "A1C4G4"
+}
+```
+
+#### Rename Document
+```json
+{
+	"action": "rename",
+	"client_id": "321F4",
+	"document_id": "A1C4G4",
+	"new_doc_name": "Notes"
+}
 ```

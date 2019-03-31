@@ -40,7 +40,8 @@ public class DSServerThread extends Thread {
 		if (debug){
 			System.out.println("Waiting for user...");
 		}
-
+		
+		//TODO: listen for input from client (json packets)
 		while (true){
 			try {
 				int expected;
@@ -57,8 +58,8 @@ public class DSServerThread extends Thread {
 					continue;
 				}
 			} catch (IOException e) {
-				// TODO I hate this, change it
-				System.out.println("Something Fucked up");
+				// Client disconnected
+				System.out.println("Client " + idNum + " closed connection");
 				parent.kill(this);
 				break;
 			}
