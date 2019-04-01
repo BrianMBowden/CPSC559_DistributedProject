@@ -35,6 +35,12 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 
+import java.util.UUID;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import makingJSON.JSONobjects;
 /**
  * This class updates its state based on client interaction with the editor
  * 
@@ -55,13 +61,15 @@ public class EditorView extends JPanel
 	private JScrollPane scrollPane;
 	private JFileChooser fChooser = new JFileChooser();
 	private final String UUID;
+	
+	private EditorController editC;
 
 	// setting up editor
 	public EditorView(EditorController frame)
 	{
 		UUID = frame.getDocID();
 		this.frame = frame;
-
+		this.editC = frame;
 		GroupLayout layout = new GroupLayout(this);
 
 		setLayout(layout);
@@ -158,6 +166,11 @@ public class EditorView extends JPanel
 				System.out.println(
 						"\tEvent: insertUpdate[" + editorPane.getDocument().getText(docE.getOffset(), docE.getLength())
 								+ "], send update to server");
+				JSONObject obj = JSONobjects.encodeInsert(editC.getClientID(), 
+						editC.getDocID(), docE.getOffset(), docE.getLength(),
+						editorPane.getDocument().getText(docE.getOffset(), docE.getLength()));
+				System.out.println(obj.toJSONString());
+				editC.getClient().sentMssgToServer(obj.toJSONString());
 
 			} catch (BadLocationException e1)
 			{

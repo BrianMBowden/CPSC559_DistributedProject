@@ -75,6 +75,9 @@ public class EditorController extends JFrame
 		setLocationRelativeTo(null);
 		//setVisible(true);
 	}
+	
+	public String getClientID(){return CLIENT_UUID.toString();}
+	public Client getClient(){return client;}
 
 	/**
 	 * Create the frame.

@@ -44,19 +44,9 @@ public class DSServerThread extends Thread {
 		//TODO: listen for input from client (json packets)
 		while (true){
 			try {
-				int expected;
-				expected = data.getIn().readInt();
-				if (expected == 0){
-					parent.kill(this);
-					break;
-				}
-				else if (expected == 1){
-					parent.killAll();
-					break;
-				}
-				else {
-					continue;
-				}
+				System.out.println("in the loop on the server side");
+				String input = data.getIn().readUTF();
+				System.out.println(input);	
 			} catch (IOException e) {
 				// Client disconnected
 				System.out.println("Client " + idNum + " closed connection");
