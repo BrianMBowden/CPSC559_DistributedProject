@@ -12,12 +12,6 @@ const masterConnection = require('./masterConnection.js');
 const client = require('./client.js');
 const webserver = require('./webserver.js');
 
-function noop() {}
-
-function heartbeat() {
-    this.isAlive = true;
-}
-
 let propogateLog;
 
 let MasterServer = function() {
@@ -35,14 +29,15 @@ let MasterServer = function() {
     self.clientSocketServerPort = null;
     self.masterSocketServerPort = null;
 
-    self.clientSocketServer = null;
     self.masterSocketServer = null;
-    self.clientInitialSocketServer = null;
+    self.clientSocketServer = null;
 
     self.masters = [];
-    self.clients = [];
 
     self.documents = [];
+
+    self.masterDocuments = {};
+    self.masterClientPorts = {};
 
     self.inElection = false;
     self.electionTimer = null;
@@ -58,8 +53,8 @@ let MasterServer = function() {
         AWS.config.update(awsConf.aws);
         self.docClient = new AWS.DynamoDB.DocumentClient();
 
-
         let readyCount = 0;
+
         // accept connections from clients
         portfinder.getPort((err, port) => {
             if (err) {
@@ -67,35 +62,22 @@ let MasterServer = function() {
             }
 
             self.clientSocketServerPort = port;
+            if (self.masterSocketServerPort) {
+                self.masterClientPorts[self.masterSocketServerPort] = self.clientSocketServerPort;
+            }
 
             self.clientSocketServer = new ws.Server({
                 port: port
             });
 
             self.clientSocketServer.on('connection', function connection(ws) {
-                ws.isalive = true;
-                ws.on('pong', heartbeat);
-
-                let client = new client.Client(self, ws);
-                ws.__client = client;
-
-                self.clients.push(client);
+                let cli = new client.Client(self, ws);
+                ws.__client = cli;
 
                 ws.on('close', function() {
-                    self.deadClient(client);
+                    console.log('Client has disconnected');
                 });
             });
-
-            setInterval(function ping() {
-                self.clientSocketServer.clients.forEach(function each(ws) {
-                    if (ws.isAlive === false) {
-                        // connection is dead
-                        self.deadClient(ws.__client);
-                    }
-                    ws.isAlive = false();
-                    ws.ping(noop);
-                });
-            }, conf.heartbeatInterval);
 
             console.log(`Client socket server running on ${port}`);
             readyCount++;
@@ -111,15 +93,15 @@ let MasterServer = function() {
             }
 
             self.masterSocketServerPort = port;
+            if (self.clientSocketServerPort) {
+                self.masterClientPorts[self.masterSocketServerPort] = self.clientSocketServerPort;
+            }
 
             self.masterSocketServer = new ws.Server({
                 port: port
             });
 
             self.masterSocketServer.on('connection', function connection(ws) {
-                ws.isalive = true;
-                ws.on('pong', heartbeat);
-
                 let master = new masterConnection.MasterConnection(self, ws);
                 ws.__master = master;
 
@@ -129,17 +111,6 @@ let MasterServer = function() {
                     self.deadMaster(master);
                 });
             });
-
-            setInterval(function ping() {
-                self.clientSocketServer.clients.forEach(function each(ws) {
-                    if (ws.isAlive === false) {
-                        // connection is dead
-                        self.deadMaster(ws.__master);
-                    }
-                    ws.isAlive = false();
-                    ws.ping(noop);
-                });
-            }, conf.heartbeatInterval);
 
             console.log(`Master socket server running on ${port}`);
             readyCount++;
@@ -255,7 +226,8 @@ let MasterServer = function() {
                     action: 'MasterHello',
                     masters: self.getMasterPorts(),
                     myPort: self.masterSocketServerPort,
-                    primary: self.primary
+                    primary: self.primary,
+                    mcPort: self.clientSocketServerPort
                 });
 
                 socket.on('close', function() {
@@ -267,6 +239,30 @@ let MasterServer = function() {
         }
     };
 
+    self.getBalancedMaster = function() {
+        if (self.masters.length === 0) {
+            return self.masterSocketServerPort;
+        } else {
+            for (let master of self.masters) {
+                if (!self.documents.hasOwnProperty(master.masterSocketServerPort)) {
+                    return master.masterSocketServerPort;
+                }
+            }
+
+            // all masters have documents
+            let min = 0;
+            let mmPort = null;
+            for (let port in self.documents) {
+                if (self.documents[port].length < min) {
+                    min = self.documents[port].length;
+                    mmPort = port;
+                }
+            }
+
+            return mmPort;
+        }
+    }
+
     self.becomePrimary = function(callback) {
         if (!self.isPrimary) {
             console.log(`Master ${self.id} is becoming primary`);
@@ -274,6 +270,9 @@ let MasterServer = function() {
             self.primary.id = self.id;
             self.primary.mmPort = self.masterSocketServerPort;
             self.primary.updated = Date.now();
+            self.broadcastToMasters({
+                action: 'SynchronizeRequest'
+            });
             killPort(conf.primaryPort).then(() => {
                 self.launchWebServer(() => {
                     self.createMasterIfRequired(callback);
@@ -354,18 +353,6 @@ let MasterServer = function() {
         return Array.from(masterPorts);
     }
 
-    self.deadClient = function(client) {
-        console.log(`client ${client.id} has died`);
-        client.socket.terminate();
-        for (let i = 0; i < self.clients.length; i++) {
-            if (self.clients[i] === client) {
-                self.clients.splice(0, 1);
-                delete client;
-                break;
-            }
-        }
-    };
-
     self.deadMaster = function(master) {
         console.log(`master ${master.masterSocketServerPort} has died`);
         master.socket.terminate();
@@ -375,6 +362,11 @@ let MasterServer = function() {
                 delete master;
                 break;
             }
+        }
+
+        if (self.isPrimary) {
+            delete self.masterClientPorts[master.masterSocketServerPort];
+            delete self.masterDocuments[master.masterSocketServerPort];
         }
 
         if (master.masterSocketServerPort === self.primary.mmPort) {

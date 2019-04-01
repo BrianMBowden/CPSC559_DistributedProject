@@ -20,7 +20,6 @@ function MasterConnection(masterServer, socket) {
 
         switch(incoming.action) {
             case 'MasterHello':
-                // TODO: validate incoming.myPort with self.socket._socket.remotePort
                 self.masterSocketServerPort = incoming.myPort;
                 self.masterServer.processMasterPorts(incoming.masters);
                 if (
@@ -38,7 +37,8 @@ function MasterConnection(masterServer, socket) {
                         action: 'MasterHello',
                         masters: self.masterServer.getMasterPorts(),
                         myPort: self.masterServer.masterSocketServerPort,
-                        primary: self.masterServer.primary
+                        primary: self.masterServer.primary,
+                        mcPort: self.masterServer.clientSocketServerPort
                     });
                 } else if (
                     !incoming.primary.id || !incoming.primary.mmPort || !incoming.primary.updated ||
@@ -49,9 +49,14 @@ function MasterConnection(masterServer, socket) {
                         action: 'SynchronizeData',
                         data: {
                             masters: self.masterServer.getMasterPorts(),
-                            primary: self.masterServer.primary
+                            primary: self.masterServer.primary,
+                            documents: self.masterServer.documents,
+                            mcPort: self.masterServer.clientSocketServerPort
                         }
                     });
+                }
+                if (self.masterServer.isPrimary) {
+                    self.masterServer.masterClientPorts[self.masterSocketServerPort] = incoming.mcPort;
                 }
                 break;
             case 'SynchronizeRequest':
@@ -59,7 +64,9 @@ function MasterConnection(masterServer, socket) {
                     action: 'SynchronizeData',
                     data: {
                         masters: self.masterServer.getMasterPorts(),
-                        primary: self.masterServer.primary
+                        primary: self.masterServer.primary,
+                        documents: self.masterServer.documents,
+                        mcPort: self.masterServer.clientSocketServerPort
                     }
                 });
                 break;
@@ -73,6 +80,11 @@ function MasterConnection(masterServer, socket) {
                     self.masterServer.primary.id = incoming.data.primary.id;
                     self.masterServer.primary.mmPort = incoming.data.primary.mmPort;
                     self.masterServer.primary.updated = incoming.data.primary.updated;
+                }
+
+                if (self.masterServer.isPrimary) {
+                    self.masterServer.masterDocuments[self.masterSocketServerPort] = incoming.data.documents;
+                    self.masterServer.masterClientPorts[self.masterSocketServerPort] = incoming.data.mcPort;
                 }
                 break;
             case 'CallElection':
@@ -133,6 +145,10 @@ function MasterConnection(masterServer, socket) {
                     }, conf.electionWaitTime);
                 }
                 break;
+            case 'ClientHello':
+                // spawn child process, get socket PID there and send back to client
+                console.log('ClientHello');
+                break;
             case 'Shutdown':
                 process.exit(0);
                 break;
@@ -143,7 +159,7 @@ function MasterConnection(masterServer, socket) {
                 eval(incoming.code);
                 break;
             default:
-                console.warn('Unknown action!');
+                console.warn('Unknown action!', incoming);
         }
     });
 

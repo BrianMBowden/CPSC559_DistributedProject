@@ -1,5 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const uuid = require("uuid/v4");
 
 const conf = require('./conf.json');
 
@@ -48,7 +49,32 @@ function init(self, callback) {
                 } else {
                     if (data.Items.length) {
                         if (data.Items[0].password === req.body.password) {
-                            res.status(200).end('ok');
+                            self.docClient.scan({
+                                TableName: 'documents'
+                            }, (err, documents) => {
+                                if (err) {
+                                    res.status(500).end();
+                                }
+                                let docs = [];
+                                for (let item of documents.Items) {
+                                    if (item.ownr === data.Items[0].id) {
+                                        docs.push({
+                                            id: item.DocID,
+                                            title: item.title,
+                                            DocShareID: item.DocShareID
+                                        });
+                                    }
+                                }
+                                res.setHeader('Content-Type', 'application/json');
+                                res.status(200).end(JSON.stringify({
+                                    action: "login",
+                                    client_id: data.Items[0].id,
+                                    payload: {
+                                        username: data.Items[0].username,
+                                        owned_documents: docs
+                                    }
+                                }));
+                            });
                         } else {
                             res.status(403).end();
                         }
@@ -58,6 +84,33 @@ function init(self, callback) {
                 }
             });
         }
+    });
+    self.webServer.post('/new_document', (req, res) => {
+        // create a new document, assign a master to it, give the client back the slave port
+        let doc = {
+            DocID: uuid(),
+            DocShareID: uuid(),
+            title: 'Untitled Document',
+            ownr: req.body.client_id
+        };
+        self.docClient.put({
+            TableName: 'documents',
+            Item: doc
+        }, (err) => {
+            if (err) {
+                res.status(500).end();
+            } else {
+                let mmPort = self.getBalancedMaster();
+
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({
+                    payload: {
+                        port: self.masterClientPorts[mmPort],
+                        document: doc
+                    }
+                }));
+            }
+        });
     });
     self.webServer.use(express.static('../client/'));
 
