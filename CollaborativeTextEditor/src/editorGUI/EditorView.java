@@ -155,20 +155,32 @@ public class EditorView extends JPanel
 			System.out.println("IN " + this.getClass().getName());
 			System.out.println("\tEvent: removeUpdate[" + "offset:" + docE.getOffset() + ",len:" + docE.getLength()
 					+ "], send update to server");
+			
+			try {
+				JSONObject obj = JSONobjects.encodeIN_DEL(editC.getClientID(),
+						editC.getDocID(), docE.getOffset(), docE.getLength(),
+						editorPane.getDocument().getText(docE.getOffset(), docE.getLength()), "delete");
+				System.out.println(obj.toJSONString());
+				editC.getClient().sentMssgToServer(obj.toJSONString());
+			} catch (BadLocationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 		}
 
 		@Override
 		public void insertUpdate(DocumentEvent docE)
 		{
-			System.out.println("IN " + this.getClass().getName());
+			//System.out.println("IN " + this.getClass().getName());
 			try
 			{
-				System.out.println(
+/*				System.out.println(
 						"\tEvent: insertUpdate[" + editorPane.getDocument().getText(docE.getOffset(), docE.getLength())
-								+ "], send update to server");
-				JSONObject obj = JSONobjects.encodeInsert(editC.getClientID(), 
+								+ "], send update to server");*/
+				JSONObject obj = JSONobjects.encodeIN_DEL(editC.getClientID(), 
 						editC.getDocID(), docE.getOffset(), docE.getLength(),
-						editorPane.getDocument().getText(docE.getOffset(), docE.getLength()));
+						editorPane.getDocument().getText(docE.getOffset(), docE.getLength()), "insert");
 				System.out.println(obj.toJSONString());
 				editC.getClient().sentMssgToServer(obj.toJSONString());
 
@@ -224,6 +236,10 @@ public class EditorView extends JPanel
 			int col = posRelativeToOrigin - rowOffSet;
 
 			// TODO: send latest caret position to the server
+			JSONObject obj = JSONobjects.encodeCaret(editC.getClientID(), editC.getDocID(), row, col);
+			System.out.println(obj.toJSONString());
+			editC.getClient().sentMssgToServer(obj.toJSONString());
+			
 //			System.out.println("IN " + this.getClass().getName());
 //			System.out.println("\t" + posRelativeToOrigin + " , " + rowOffSet);
 //			System.out.format("\tRow:%s  Col:%s\n", row, col);
