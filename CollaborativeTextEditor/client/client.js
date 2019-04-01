@@ -165,6 +165,6 @@ $(document).ready((e) => {
     }).apply(window.typeit);
 
 
-  console.log("Starting client...");
-  typeit.init();
+      console.log("Starting client...");
+      typeit.init();
 });
