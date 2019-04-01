@@ -1,0 +1,5 @@
+{
+    "primaryPort": 8888,
+    "minMasters": 0,
+    "heartbeatInterval": 10000
+}

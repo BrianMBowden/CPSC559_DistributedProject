@@ -15,5 +15,15 @@
   "bugs": {
     "url": "https://github.com/BrianMBowden/CPSC559_DistributedProject/issues"
   },
-  "homepage": "https://github.com/BrianMBowden/CPSC559_DistributedProject#readme"
+  "homepage": "https://github.com/BrianMBowden/CPSC559_DistributedProject#readme",
+  "dependencies": {
+    "automerge": "^0.10.0",
+    "body-parser": "^1.18.3",
+    "command-line-args": "^5.1.1",
+    "command-line-usage": "^5.0.5",
+    "express": "^4.16.4",
+    "portfinder": "^1.0.20",
+    "uuid": "^3.3.2",
+    "ws": "^6.2.1"
+  }
 }

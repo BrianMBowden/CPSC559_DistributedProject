@@ -1,0 +1,53 @@
+<html>
+    <head>
+        <link href="/jsoneditor/dist/jsoneditor.min.css" rel="stylesheet" type="text/css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="/jsoneditor/dist/jsoneditor.min.js"></script>
+    </head>
+    <body>
+        <div>
+            <input type="button" value="crash primary" name="crash-primary">
+            <hr>
+            broadcast to all non-primary masters
+            <input type="button" value="reset" name="mmbroadcast-reset">
+            <input type="button" value="broadcast" name="mmbroadcast-send">
+            <div id="mmbroadcasteditor" style="width: 400px; height: 400px;"></div>
+        </div>
+
+        <script type="text/javascript">
+            $('input[name="crash-primary"]').click((e) => {
+                $.ajax({
+                    type: 'POST',
+                    url: '/crash'
+                });
+            });
+            var container = document.getElementById("mmbroadcasteditor");
+            var options = {
+                mode: 'code'
+            };
+            var masterBroadcastEditor = new JSONEditor(container, options, {
+                action: null
+            });
+            $('input[name="mmbroadcast-reset"]').click((e) => {
+                masterBroadcastEditor.set({
+                    action: null
+                });
+            });
+            $('input[name="mmbroadcast-send"]').click((e) => {
+                try {
+                    var json = masterBroadcastEditor.get();
+                } catch (e) {
+                    alert('invalid payload');
+                    return;
+                }
+                $.ajax({
+                    type: 'POST',
+                    url: '/broadcast',
+                    data: {
+                        payload: json
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>
