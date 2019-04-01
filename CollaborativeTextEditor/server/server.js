@@ -23,6 +23,11 @@ const optionDefinitions = [
         type: String,
         description: 'The known masters (comma-delimited ports)',
         typeLabel: '<port,port,port,...>'
+    },
+    {
+        name: 'log',
+        type: Boolean,
+        description: 'Have all processes write their output to log/uuid.log'
     }
 ];
 
@@ -54,7 +59,8 @@ function main() {
         console.log('Initializing distributed TypeIt system...');
         masterServer.createNewMasterServer({
             primary: true,
-            masterPorts: []
+            masterPorts: [],
+            log: options.log
         }, (primary) => {
             console.log('Done.');
         });
@@ -72,7 +78,8 @@ function main() {
 
         masterServer.createNewMasterServer({
             primary: false,
-            masterPorts: masterPorts
+            masterPorts: masterPorts,
+            log: options.log
         }, (master) => {
             console.log('Done.');
         });

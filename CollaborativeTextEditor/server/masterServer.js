@@ -2,6 +2,8 @@ const ws = require("ws");
 const portfinder = require("portfinder");
 const uuid = require("uuid/v4");
 const child_process = require("child_process");
+const killPort = require('kill-port');
+const fs = require('fs');
 
 const conf = require('./conf.json');
 const masterConnection = require('./masterConnection.js');
@@ -13,6 +15,8 @@ function noop() {}
 function heartbeat() {
     this.isAlive = true;
 }
+
+let propogateLog;
 
 let MasterServer = function() {
     let self = this;
@@ -36,8 +40,13 @@ let MasterServer = function() {
     self.masters = [];
     self.clients = [];
 
+    self.documents = [];
+
+    self.inElection = false;
+    self.electionTimer = null;
+
     self.init = function(cb) {
-        console.log('Initializing master with id', self.id);
+        console.log('Initializing master with id', self.id, "pid:", process.pid);
         let readyCount = 0;
         // accept connections from clients
         portfinder.getPort((err, port) => {
@@ -126,6 +135,13 @@ let MasterServer = function() {
                 cb();
             }
         });
+
+        setTimeout(function() {
+            // if we don't know who the primary is within 1s, call an election
+            if (!self.primary.id) {
+                self.electPrimary();
+            }
+        }, 1000);
     }
 
     self.processMasterPorts = function(ports) {
@@ -146,7 +162,55 @@ let MasterServer = function() {
             // this is a new master!
             self.connectToMaster(port);
         }
-    }
+    };
+
+    self.electPrimary = function() {
+        self.inElection = true;
+        let ports = self.getMasterPorts();
+        ports.sort();
+        if (self.masterSocketServerPort === ports[ports.length - 1]) {
+            // we are the new leader
+            self.broadcastToMasters({
+                action: 'ElectionVictory',
+                id: self.id,
+                mmPort: self.masterSocketServerPort,
+                updated: Date.now()
+            });
+            self.inElection = false;
+            self.becomePrimary((err) => {
+                if (err) {
+                    throw err;
+                }
+            });
+        } else {
+            let sentMessage = false;
+            for (let master of self.masters) {
+                if (master.masterSocketServerPort > self.masterSocketServerPort) {
+                    master.send({
+                        action: 'CallElection'
+                    });
+                    sentMessage = true;
+                }
+            }
+            if (sentMessage) {
+                self.electionTimer = setTimeout(function() {
+                    // there were no answers. I am the victor
+                    self.broadcastToMasters({
+                        action: 'ElectionVictory',
+                        id: self.id,
+                        mmPort: self.masterSocketServerPort,
+                        updated: Date.now()
+                    });
+                    self.inElection = false;
+                    self.becomePrimary((err) => {
+                        if (err) {
+                            throw err;
+                        }
+                    });
+                }, conf.electionWaitTime);
+            }
+        }
+    };
 
     self.connectToMaster = function(port) {
         let socket = new ws(`ws://localhost:${port}`);
@@ -170,14 +234,20 @@ let MasterServer = function() {
     };
 
     self.becomePrimary = function(callback) {
-        console.log(`Master ${self.id} is becoming primary`);
-        self.isPrimary = true;
-        self.primary.id = self.id;
-        self.primary.mmPort = self.masterSocketServerPort;
-        self.primary.updated = Date.now();
-        self.launchWebServer(() => {
-            self.createMasterIfRequired(callback);
-        });
+        if (!self.isPrimary) {
+            console.log(`Master ${self.id} is becoming primary`);
+            self.isPrimary = true;
+            self.primary.id = self.id;
+            self.primary.mmPort = self.masterSocketServerPort;
+            self.primary.updated = Date.now();
+            killPort(conf.primaryPort).then(() => {
+                self.launchWebServer(() => {
+                    self.createMasterIfRequired(callback);
+                });
+            });
+        } else {
+            console.log('Already the primary');
+        }
     };
 
     self.launchWebServer = function(callback) {
@@ -208,11 +278,15 @@ let MasterServer = function() {
     self.spawnMaster = function() {
         masterPorts = self.getMasterPorts().join(',');
         console.log('Sharing master ports with new master: ' + masterPorts);
-        let child = child_process.spawn('node', [
+        let options = [
             'server.js',
             '--action', 'join',
             '--peers', masterPorts
-        ], {
+        ];
+        if (propogateLog) {
+            options.push('--log');
+        }
+        let child = child_process.spawn('node', options, {
             detached: true,
             stdio: [
                 'ignore',
@@ -254,17 +328,52 @@ let MasterServer = function() {
         console.log(`master ${master.masterSocketServerPort} has died`);
         master.socket.terminate();
         for (let i = 0; i < self.masters.length; i++) {
-            if (self.masters[i] === master) {
-                self.masters.splice(0, 1);
+            if (self.masters[i].masterSocketServerPort === master.masterSocketServerPort) {
+                self.masters.splice(i, 1);
                 delete master;
                 break;
             }
+        }
+
+        if (master.masterSocketServerPort === self.primary.mmPort) {
+            // primary master crashed
+            self.primary = {
+                id: null,
+                mmPort: null,
+                updated: Date.now()
+            };
+            setTimeout(function() {
+                self.electPrimary();
+            }, 100);
+        } else if (self.isPrimary) {
+            self.createMasterIfRequired(() => {
+                // ok
+            });
         }
     };
 };
 
 function createNewMasterServer(options, callback) {
     let master = new MasterServer();
+
+    propogateLog = options.log;
+    if (options.log) {
+        let logStream = fs.createWriteStream(`./log/${master.id}.log`);
+
+        let oStdoutWrite = process.stdout.write;
+        let oStderrWrite = process.stderr.write;
+
+        function nStdoutWrite () {
+            oStdoutWrite.apply(process.stdout, arguments);
+            logStream.write.apply(logStream, arguments);
+        }
+        function nStderrWrite () {
+            oStderrWrite.apply(process.stderr, arguments);
+            logStream.write.apply(logStream, arguments);
+        }
+        process.stdout.write = nStdoutWrite;
+        process.stderr.write = nStderrWrite;
+    }
 
     master.init(function() {
         if (options.primary) {

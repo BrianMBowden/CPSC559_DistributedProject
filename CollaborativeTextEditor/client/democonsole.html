@@ -7,11 +7,17 @@
     <body>
         <div>
             <input type="button" value="crash primary" name="crash-primary">
+            <input type="button" value="crash master" name="crash-master">
             <hr>
             broadcast to all non-primary masters
             <input type="button" value="reset" name="mmbroadcast-reset">
             <input type="button" value="broadcast" name="mmbroadcast-send">
             <div id="mmbroadcasteditor" style="width: 400px; height: 400px;"></div>
+            <hr>
+            send to master
+            <input type="button" value="reset" name="mmsend-reset">
+            <input type="button" value="send" name="mmsend-send">
+            <div id="mmsendeditor" style="width: 400px; height: 400px;"></div>
         </div>
 
         <script type="text/javascript">
@@ -21,6 +27,25 @@
                     url: '/crash'
                 });
             });
+            $('input[name="crash-master"]').click((e) => {
+                let port = parseInt(prompt('enter the mmPort of the master to crash'), 10);
+                if (isNaN(port)) {
+                    alert('invalid port.');
+                    return;
+                }
+                $.ajax({
+                    type: 'POST',
+                    url: '/send',
+                    data: {
+                        master: port,
+                        payload: {
+                            action: 'Crash'
+                        }
+                    }
+                });
+            });
+
+
             var container = document.getElementById("mmbroadcasteditor");
             var options = {
                 mode: 'code'
@@ -44,6 +69,40 @@
                     type: 'POST',
                     url: '/broadcast',
                     data: {
+                        payload: json
+                    }
+                });
+            });
+
+            var container2 = document.getElementById("mmsendeditor");
+            var options2 = {
+                mode: 'code'
+            };
+            var masterSendEditor = new JSONEditor(container2, options2, {
+                action: null
+            });
+            $('input[name="mmsend-reset"]').click((e) => {
+                masterSendEditor.set({
+                    action: null
+                });
+            });
+            $('input[name="mmsend-send"]').click((e) => {
+                try {
+                    var json = masterSendEditor.get();
+                } catch (e) {
+                    alert('invalid payload');
+                    return;
+                }
+                let port = parseInt(prompt('enter the mmPort of the master to send to'), 10);
+                if (isNaN(port)) {
+                    alert('invalid port.');
+                    return;
+                }
+                $.ajax({
+                    type: 'POST',
+                    url: '/send',
+                    data: {
+                        master: port,
                         payload: json
                     }
                 });

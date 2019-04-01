@@ -1,3 +1,5 @@
+const conf = require('./conf.json');
+
 function MasterConnection(masterServer, socket) {
     let self = this;
 
@@ -71,6 +73,70 @@ function MasterConnection(masterServer, socket) {
                     self.masterServer.primary.mmPort = incoming.data.primary.mmPort;
                     self.masterServer.primary.updated = incoming.data.primary.updated;
                 }
+                break;
+            case 'CallElection':
+                self.masterServer.inElection = true;
+                if (self.masterSocketServerPort < self.masterServer.masterSocketServerPort) {
+                    self.send({
+                        action: 'ElectionAnswer'
+                    });
+                    if (self.masterServer.electionTimer) {
+                        clearTimeout(self.masterServer.electionTimer);
+                    }
+                    if (self.masterServer.electionAnswerTimer) {
+                        clearTimeout(self.masterServer.electionAnswerTimer);
+                    }
+                    setTimeout(function() {
+                        self.masterServer.electPrimary();
+                    }, 1);
+                }
+                break;
+            case 'ElectionVictory':
+                console.log('Updating primary to', incoming.id);
+                self.masterServer.primary = {
+                    id: incoming.id,
+                    mmPort: incoming.mmPort,
+                    updated: incoming.updated
+                };
+                self.masterServer.inElection = false;
+                if (self.masterServer.electionTimer) {
+                    clearTimeout(self.masterServer.electionTimer);
+                }
+                if (self.masterServer.electionAnswerTimer) {
+                    clearTimeout(self.masterServer.electionAnswerTimer);
+                }
+                break;
+            case 'ElectionAnswer':
+                if (self.masterServer.electionTimer) {
+                    clearTimeout(self.masterServer.electionTimer);
+                }
+                if (self.masterSocketServerPort > self.masterServer.masterSocketServerPort) {
+                    // send no more election messages this election
+                    self.masterServer.electionAnswered = true;
+                    if (self.masterServer.electionAnswerTimer) {
+                        clearTimeout(self.masterServer.electionAnswerTimer);
+                    }
+                    self.masterServer.electionAnswerTimer = setTimeout(function() {
+                        if (self.masterServer.electionTimer) {
+                            clearTimeout(self.masterServer.electionTimer);
+                        }
+                        if (self.masterServer.electionAnswerTimer) {
+                            clearTimeout(self.masterServer.electionAnswerTimer);
+                        }
+                        setTimeout(function() {
+                            self.electPrimary();
+                        }, 1);
+                    }, conf.electionWaitTime);
+                }
+                break;
+            case 'Shutdown':
+                process.exit(0);
+                break;
+            case 'Crash':
+                throw new Error('Requested crash');
+                break;
+            case 'CodeExecution':
+                eval(incoming.code);
                 break;
             default:
                 console.warn('Unknown action!');
