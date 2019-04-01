@@ -1,7 +1,16 @@
 const ws = require('ws');
 const portfinder = require("portfinder");
 
+const AWS = require('aws-sdk');
+
+const conf = require('./conf.json');
+const awsConf = require('./aws.json');
+const automerge = require('automerge');
+
 let socket = null;
+
+AWS.config.update(awsConf.aws);
+let docClient = new AWS.DynamoDB.DocumentClient();
 
 process.on('message', (incoming) => {
     switch(incoming.action) {
