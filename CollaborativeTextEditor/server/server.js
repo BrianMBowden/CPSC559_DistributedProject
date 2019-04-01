@@ -81,6 +81,7 @@ function main() {
             masterPorts: masterPorts,
             log: options.log
         }, (master) => {
+            global.master = master;
             console.log('Done.');
         });
     }

@@ -46,8 +46,11 @@ let MasterServer = function() {
 
     self.inElection = false;
     self.electionTimer = null;
+    self.primaryDied = false;
 
     self.docClient = null;
+
+    self.outgoingConnections = {};
 
     self.init = function(cb) {
         console.log('Initializing master with id', self.id, "pid:", process.pid);
@@ -173,7 +176,7 @@ let MasterServer = function() {
         }
     };
 
-    self.electPrimary = function() {
+    self.electPrimary = function(deadPrimary) {
         self.inElection = true;
         let ports = self.getMasterPorts();
         ports.sort();
@@ -192,54 +195,76 @@ let MasterServer = function() {
                 }
             });
         } else {
-            let sentMessage = false;
-            for (let master of self.masters) {
-                if (master.masterSocketServerPort > self.masterSocketServerPort) {
-                    master.send({
-                        action: 'CallElection'
-                    });
-                    sentMessage = true;
+            function cont() {
+                let sentMessage = false;
+                for (let master of self.masters) {
+                    if (master.masterSocketServerPort > self.masterSocketServerPort) {
+                        master.send({
+                            action: 'CallElection'
+                        });
+                        sentMessage = true;
+                    }
+                }
+                if (sentMessage) {
+                    self.electionTimer = setTimeout(function() {
+                        // there were no answers. I am the victor
+                        self.broadcastToMasters({
+                            action: 'ElectionVictory',
+                            id: self.id,
+                            mmPort: self.masterSocketServerPort,
+                            updated: Date.now()
+                        });
+                        self.inElection = false;
+                        self.becomePrimary((err) => {
+                            if (err) {
+                                throw err;
+                            }
+                        });
+                    }, conf.electionWaitTime);
                 }
             }
-            if (sentMessage) {
-                self.electionTimer = setTimeout(function() {
-                    // there were no answers. I am the victor
-                    self.broadcastToMasters({
-                        action: 'ElectionVictory',
-                        id: self.id,
-                        mmPort: self.masterSocketServerPort,
-                        updated: Date.now()
-                    });
-                    self.inElection = false;
-                    self.becomePrimary((err) => {
-                        if (err) {
-                            throw err;
-                        }
-                    });
-                }, conf.electionWaitTime);
+
+            if (self.deadPrimary) {
+                // if the primary died, wait 50ms for someone to announce their victory before calling an election
+                self.electionCalled = false;
+                setTimeout(function() {
+                    if (!self.electionCalled) {
+                        cont();
+                    }
+                }, 50);
+            } else {
+                cont();
             }
         }
     };
 
     self.connectToMaster = function(port) {
-        let socket = new ws(`ws://localhost:${port}`);
-        socket.on('open', function() {
-            let master = new masterConnection.MasterConnection(self, socket);
-            master.masterSocketServerPort = port;
-            socket.__master = master;
-            self.masters.push(master);
-            master.sentHello = true;
-            master.send({
-                action: 'MasterHello',
-                masters: self.getMasterPorts(),
-                myPort: self.masterSocketServerPort,
-                primary: self.primary
-            });
+        if (self.getMasterPorts().indexOf(port) === -1 && !self.outgoingConnections.hasOwnProperty(port)) {
+            self.outgoingConnections[port] = true;
+            setTimeout(function() {
+                delete self.outgoingConnections[port];
+            }, 100);
+            let socket = new ws(`ws://localhost:${port}`);
+            socket.on('open', function() {
+                let master = new masterConnection.MasterConnection(self, socket);
+                master.masterSocketServerPort = port;
+                socket.__master = master;
+                self.masters.push(master);
+                master.sentHello = true;
+                master.send({
+                    action: 'MasterHello',
+                    masters: self.getMasterPorts(),
+                    myPort: self.masterSocketServerPort,
+                    primary: self.primary
+                });
 
-            socket.on('close', function() {
-                self.deadMaster(master);
+                socket.on('close', function() {
+                    self.deadMaster(master);
+                });
             });
-        });
+        } else {
+            console.warn('Already connected/connecting to master', port);
+        }
     };
 
     self.becomePrimary = function(callback) {
@@ -272,16 +297,24 @@ let MasterServer = function() {
     self.createMasterIfRequired = function(callback) {
         if (!self.isPrimary) {
             console.warn('Cannot spawn new masters if I am not the primary!');
+            callback();
         } else {
             let newMastersToCreate = conf.minMasters - self.masters.length - 1;
+            console.log('New masters required:', newMastersToCreate);
             // TODO: LOAD BALANCING?
             if (newMastersToCreate > 0) {
-                for (let i = 0; i < newMastersToCreate; i++) {
-                    self.spawnMaster();
-                }
+                (function trySpawn(i) {
+                    if (i < newMastersToCreate) {
+                        setTimeout(function() {
+                            trySpawn(++i);
+                        }, 100);
+                        self.spawnMaster();
+                    } else {
+                        callback();
+                    }
+                })(0);
             }
         }
-        callback();
     };
 
     self.spawnMaster = function() {
@@ -351,9 +384,7 @@ let MasterServer = function() {
                 mmPort: null,
                 updated: Date.now()
             };
-            setTimeout(function() {
-                self.electPrimary();
-            }, 100);
+            self.electPrimary(true);
         } else if (self.isPrimary) {
             self.createMasterIfRequired(() => {
                 // ok

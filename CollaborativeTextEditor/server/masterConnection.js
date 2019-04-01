@@ -20,6 +20,7 @@ function MasterConnection(masterServer, socket) {
 
         switch(incoming.action) {
             case 'MasterHello':
+                // TODO: validate incoming.myPort with self.socket._socket.remotePort
                 self.masterSocketServerPort = incoming.myPort;
                 self.masterServer.processMasterPorts(incoming.masters);
                 if (
@@ -75,6 +76,7 @@ function MasterConnection(masterServer, socket) {
                 }
                 break;
             case 'CallElection':
+                self.masterServer.electionCalled = true;
                 self.masterServer.inElection = true;
                 if (self.masterSocketServerPort < self.masterServer.masterSocketServerPort) {
                     self.send({
@@ -92,6 +94,7 @@ function MasterConnection(masterServer, socket) {
                 }
                 break;
             case 'ElectionVictory':
+                self.masterServer.electionCalled = true;
                 console.log('Updating primary to', incoming.id);
                 self.masterServer.primary = {
                     id: incoming.id,
@@ -107,6 +110,7 @@ function MasterConnection(masterServer, socket) {
                 }
                 break;
             case 'ElectionAnswer':
+                self.masterServer.electionCalled = true;
                 if (self.masterServer.electionTimer) {
                     clearTimeout(self.masterServer.electionTimer);
                 }
