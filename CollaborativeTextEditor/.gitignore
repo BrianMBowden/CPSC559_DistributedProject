@@ -8,3 +8,4 @@
 
 node_modules/*
 server/log/*.log
+server/aws.json

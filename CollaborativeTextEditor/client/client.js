@@ -9,8 +9,7 @@ $(document).ready((e) => {
             $('#login input[name="submit"]').click((e) => {
                 window.typeit.login($('#login input[name="username"]').val(), $('#login input[name="password"]').val(), (err) => {
                     if (err) {
-                        throw err;
-                        // TODO: LOGIN FLOW
+                        alert('invalid username/password');
                     } else {
                         $('#login').hide();
                         $('#doc').show();
@@ -20,8 +19,21 @@ $(document).ready((e) => {
         };
 
         self.login = function(username, password, callback) {
-            console.warn("not implemented");
-            callback(null);
+            console.log('sending login request');
+            $.ajax({
+                url: '/login',
+                type: 'POST',
+                data: {
+                    username: username,
+                    password: password
+                },
+                success: function() {
+                    callback();
+                },
+                error: function(e) {
+                    callback(e);
+                }
+            });
         };
     }).apply(window.typeit);
 

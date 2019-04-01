@@ -4,8 +4,10 @@ const uuid = require("uuid/v4");
 const child_process = require("child_process");
 const killPort = require('kill-port');
 const fs = require('fs');
+const AWS = require('aws-sdk');
 
 const conf = require('./conf.json');
+const awsConf = require('./aws.json');
 const masterConnection = require('./masterConnection.js');
 const client = require('./client.js');
 const webserver = require('./webserver.js');
@@ -45,8 +47,15 @@ let MasterServer = function() {
     self.inElection = false;
     self.electionTimer = null;
 
+    self.docClient = null;
+
     self.init = function(cb) {
         console.log('Initializing master with id', self.id, "pid:", process.pid);
+
+        AWS.config.update(awsConf.aws);
+        self.docClient = new AWS.DynamoDB.DocumentClient();
+
+
         let readyCount = 0;
         // accept connections from clients
         portfinder.getPort((err, port) => {

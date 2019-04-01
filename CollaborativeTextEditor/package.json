@@ -18,6 +18,7 @@
   "homepage": "https://github.com/BrianMBowden/CPSC559_DistributedProject#readme",
   "dependencies": {
     "automerge": "^0.10.0",
+    "aws-sdk": "^2.432.0",
     "body-parser": "^1.18.3",
     "command-line-args": "^5.1.1",
     "command-line-usage": "^5.0.5",

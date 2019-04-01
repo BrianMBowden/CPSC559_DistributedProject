@@ -30,6 +30,35 @@ function init(self, callback) {
             throw new Error('requested crash');
         }, 1);
     });
+    self.webServer.post('/login', (req, res) => {
+        if (!req.body.username || !req.body.password) {
+            res.status(400).end();
+        } else {
+            console.log('Logging in user...');
+            self.docClient.query({
+                TableName: 'users',
+                KeyConditionExpression: 'username = :usr',
+                ExpressionAttributeValues: {
+                    ':usr': req.body.username
+                }
+            }, (err, data) => {
+                if (err) {
+                    res.status(500).end();
+                    throw err;
+                } else {
+                    if (data.Items.length) {
+                        if (data.Items[0].password === req.body.password) {
+                            res.status(200).end('ok');
+                        } else {
+                            res.status(403).end();
+                        }
+                    } else {
+                        res.status(403).end();
+                    }
+                }
+            });
+        }
+    });
     self.webServer.use(express.static('../client/'));
 
     let attempts = 0;
