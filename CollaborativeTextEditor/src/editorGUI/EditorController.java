@@ -11,6 +11,8 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.Element;
 
+import org.json.simple.JSONObject;
+
 //import client.Client;
 
 import java.awt.Color;
@@ -22,6 +24,7 @@ import java.io.File;
 import java.util.UUID;
 import java.awt.Rectangle;
 import dsClient.*;
+import makingJSON.JSONobjects;
 /**
  * This class handles input from the client and renders the appropriate view by
  * updating the Model.
@@ -105,13 +108,14 @@ public class EditorController extends JFrame
 //		setVisible(true);
 //	}
 
-	/**
-	 * To set a default name of a text document.
-	 */
+
 	public void setClient(Client client){
 		this.client = client;
 	}
 	
+	/**
+	 * To set a default name of a text document.
+	 */
 	private void setDefaultDocName()
 	{
 		this.setTitle("Untitled document");
@@ -127,6 +131,7 @@ public class EditorController extends JFrame
 	{
 		// then change the title
 		gui.setTitleName(title);
+
 	}
 
 	public String getDocID()
@@ -157,6 +162,8 @@ public class EditorController extends JFrame
 			}
 			gui.setTitleName(title);
 			// TODO: notify server about this change
+			JSONObject obj = JSONobjects.encodeRename(getClientID(), getDocID(), title);
+			getClient().sentMssgToServer(obj.toJSONString());
 		}
 	}
 
@@ -220,14 +227,15 @@ public class EditorController extends JFrame
 	{
 		// TODO: Update this when client-server is finalized
 
-		String action = String.format("{\"action\": \"JOIN\",\"file_id\": \"%s\"}", docIDToJoin);
+//		String action = String.format("{\"action\": \"JOIN\",\"file_id\": \"%s\"}", docIDToJoin);
+		JSONObject obj = JSONobjects.encodeJoin(getClientID(), docIDToJoin);
 		if (client != null)
 		{
-			client.sentMssgToServer(action);
+			client.sentMssgToServer(obj.toJSONString());
 		} else
 		{
 			System.out.println("IN " + this.getClass().getName() + ": client null");
-			System.out.println("\t action: " + action);
+			System.out.println("\t action: " + obj.toJSONString());
 		}
 	}
 

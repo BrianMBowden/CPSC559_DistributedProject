@@ -2,6 +2,8 @@ package makingJSON;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 
 public class JSONobjects {
@@ -62,5 +64,17 @@ public class JSONobjects {
 		obj.put("action", "showall");
 		obj.put("client_id", ClientID);
 		return obj;
+	}
+	
+	//TODO: decodeString is not currently working???
+	public static Object decodeString(String string){
+		JSONParser parser = new JSONParser();
+		try {
+			Object obj = parser.parse(string);
+			return obj;
+		} catch (ParseException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 }

@@ -314,6 +314,7 @@ public class EditorView extends JPanel
 		if (frame != null)
 		{
 			frame.setTitle(title);
+			
 		}
 	}
 }

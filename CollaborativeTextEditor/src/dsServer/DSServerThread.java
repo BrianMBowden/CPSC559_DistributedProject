@@ -3,6 +3,10 @@ package dsServer;
 
 import java.io.IOException;
 import java.net.*;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import makingJSON.JSONobjects;
 
 public class DSServerThread extends Thread {
 	private Socket sock;
@@ -45,8 +49,14 @@ public class DSServerThread extends Thread {
 		while (true){
 			try {
 				System.out.println("in the loop on the server side");
-				String input = data.getIn().readUTF();
-				System.out.println(input);	
+				String string = data.getIn().readUTF();
+/*				Object obj = JSONobjects.decodeString(string);
+				JSONObject jobj = (JSONObject) obj;*/
+				//System.out.println("we got here at least");
+				//System.out.println(obj.toString());
+				System.out.println(string);
+				
+				// TODO: handle different actions here -> 
 			} catch (IOException e) {
 				// Client disconnected
 				System.out.println("Client " + idNum + " closed connection");
