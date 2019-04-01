@@ -1,6 +1,9 @@
 #doc {
-    background-color: red;
+    background-color: white;
+    display: none;
+}
+
+#editor {
     width: 600px;
     height: 600px;
-    display: none;
 }
