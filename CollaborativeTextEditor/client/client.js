@@ -286,7 +286,9 @@ $(document).ready((e) => {
 
     self.connectToMaster = function(port, callback) {
       // connect to the master, then connect to the slave
-      self.masterSocket = new WebSocket(`ws://localhost:${port}`);
+      let loc = location.origin.substr(7);
+      loc = loc.substr(0, loc.indexOf(':'));
+      self.masterSocket = new WebSocket(`ws://${loc}:${port}`);
       self.masterSocket.onopen = function() {
         console.log('Connected to master', port);
 
@@ -320,7 +322,9 @@ $(document).ready((e) => {
     };
 
     self.connectToSlave = function(port, callback) {
-      self.slaveSocket = new WebSocket(`ws://localhost:${port}`);
+        let loc = location.origin.substr(7);
+        loc = loc.substr(0, loc.indexOf(':'));
+      self.slaveSocket = new WebSocket(`ws://${loc}:${port}`);
       self.slaveSocket.onopen = function() {
         console.log('Connected to slave', port);
         self.slaveSocket.send(JSON.stringify({

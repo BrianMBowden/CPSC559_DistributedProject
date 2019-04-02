@@ -22,7 +22,7 @@ Master server replication [x]
 DB replication [x]
 
 CONSISTENCY:
-consistency across clients []
+consistency across clients [x]
 consistency across DB [x]
 
 FAULT TOLERANCE:
