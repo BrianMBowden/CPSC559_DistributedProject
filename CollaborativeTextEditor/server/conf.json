@@ -1,6 +1,6 @@
 {
     "primaryPort": 8888,
-    "minMasters": 0,
+    "minMasters": 1,
     "heartbeatInterval": 10000,
     "electionWaitTime": 1000,
     "maxWebServerAttempts": 10

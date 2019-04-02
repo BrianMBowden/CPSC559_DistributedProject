@@ -49,7 +49,9 @@ portfinder.getPort((err, port) => {
                 return;
             }
 
-            console.log(`[client<<]`, incoming);
+            if (incoming.action !== 'ping') {
+                console.log(`[client<<]`, incoming);
+            }
 
             switch (incoming.action) {
                 // SLAVE TO CLIENT MESSAGES
@@ -62,6 +64,10 @@ portfinder.getPort((err, port) => {
                     process.send(incoming);
                     break;
                 case 'open_document':
+                    process.send({
+                        action: 'AddDocumentResponsibility',
+                        document_id: incoming.document_id
+                    });
                     docClient.get({
                         TableName: 'documents',
                         Key: {
@@ -85,6 +91,11 @@ portfinder.getPort((err, port) => {
                             }));
                         }
                     });
+                    break;
+                case 'ping':
+                    socket.send(JSON.stringify({
+                        action: 'pong'
+                    }));
                     break;
                 default:
                     console.log('unknown action on slave-client socket', incoming.action);

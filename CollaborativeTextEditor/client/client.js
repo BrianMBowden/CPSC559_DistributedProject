@@ -10,6 +10,7 @@ $(document).ready((e) => {
     self.masterSocket = null;
     self.slaveSocket = null;
     self.quill = null;
+    self.requestedClose = false;
 
     self.openDocument = {
         id: null,
@@ -32,6 +33,14 @@ $(document).ready((e) => {
             });
             return false;
         };
+
+        setInterval(function() {
+            if (self.slaveSocket) {
+                self.slaveSocket.send(JSON.stringify({
+                    action: 'ping'
+                }));
+            }
+        }, 1000);
 
 
       $('#login input[name="submit"]').click((e) => {
@@ -111,6 +120,7 @@ $(document).ready((e) => {
           self.masterSocket.close();
         }
         if (self.slaveSocket) {
+            self.requestedClose = true;
           self.slaveSocket.close();
         }
         self.quill.setText('');
@@ -124,7 +134,11 @@ $(document).ready((e) => {
             client_id: self.id
           },
           success: function(data) {
-            self.ownedDocuments.push(data.payload.document);
+            self.ownedDocuments.push({
+                id: data.payload.document.DocID,
+                DocShareID: data.payload.document.DocShareID,
+                title: data.payload.document.title
+            });
             self.connectToMaster(data.payload.port, (err) => {
               if (err) {
                 self.handleError(err);
@@ -264,13 +278,33 @@ $(document).ready((e) => {
             return;
           }
 
-          console.log('slave <<', incoming);
+          if (incoming.action !== 'pong') {
+              console.log('slave <<', incoming);
+          }
 
           clientConnection.handleMessage(self, incoming);
         };
 
         self.slaveSocket.onclose = function() {
-          console.log('Disconnected from slave', port);
+            console.log('Disconnected from slave', port);
+            self.slaveSocket = null;
+            if (self.requestedClose) {
+                self.requestedClose = false;
+            } else {
+                $('<div>We could not connect to the live service. You may want to export this document when it is done, as new changes may not be saved</div>').dialog({
+                    modal: true,
+                    title: 'Lost Connection',
+                    width: 600,
+                    buttons: {
+                        'Attempt to Reconnect': function() {
+                            window.location.reload();
+                        },
+                        'Ok': function() {
+                            $(this).dialog('close');
+                        }
+                    }
+                });
+            }
         };
 
         callback();
@@ -334,6 +368,7 @@ $(document).ready((e) => {
             self.masterSocket.close();
         }
         if (self.slaveSocket) {
+            self.requestedClose = true;
             self.slaveSocket.close();
         }
         self.quill.setText('');

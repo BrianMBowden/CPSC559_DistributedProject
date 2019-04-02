@@ -55,6 +55,12 @@ let Client = function(masterServer, socket) {
                     }
                 });
                 break;
+            case 'AddDocumentResponsibility':
+                self.document = incoming.document_id;
+                if (self.masterServer.documents.indexOf(incoming.document_id) === -1) {
+                    self.masterServer.documents.push(incoming.document_id);
+                }
+                break;
             default:
                 console.log('unknown slave message');
                 break;

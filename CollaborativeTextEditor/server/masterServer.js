@@ -247,17 +247,19 @@ let MasterServer = function() {
             return self.masterSocketServerPort;
         } else {
             for (let master of self.masters) {
-                if (!self.documents.hasOwnProperty(master.masterSocketServerPort)) {
-                    return master.masterSocketServerPort;
+                if (!self.masterDocuments.hasOwnProperty(master.masterSocketServerPort)) {
+                    if (self.masterClientPorts[master.masterSocketServerPort]) {
+                        return master.masterSocketServerPort;
+                    }
                 }
             }
 
             // all masters have documents
-            let min = 0;
+            let min = 1000000;
             let mmPort = null;
-            for (let port in self.documents) {
-                if (self.documents[port].length < min) {
-                    min = self.documents[port].length;
+            for (let port in self.masterDocuments) {
+                if (self.masterDocuments[port].length < min && self.masterClientPorts[port]) {
+                    min = self.masterDocuments[port].length;
                     mmPort = port;
                 }
             }
@@ -281,6 +283,11 @@ let MasterServer = function() {
                     self.createMasterIfRequired(callback);
                 });
             });
+            setInterval(function() {
+                self.broadcastToMasters({
+                    action: 'SynchronizeRequest'
+                });
+            }, 30000);
         } else {
             console.log('Already the primary');
         }
@@ -309,7 +316,7 @@ let MasterServer = function() {
                     if (i < newMastersToCreate) {
                         setTimeout(function() {
                             trySpawn(++i);
-                        }, 100);
+                        }, 1);
                         self.spawnMaster();
                     } else {
                         callback();

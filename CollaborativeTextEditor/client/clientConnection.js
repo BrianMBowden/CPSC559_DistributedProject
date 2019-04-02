@@ -7,7 +7,7 @@ clientConnection.handleMessage = function(self, incoming) {
             self.openDocument.id = incoming.document_id;
             self.openDocument.title = incoming.title;
             self.openDocument.shareId = incoming.document_share_id;
-            self.quill.setText(incoming.content);
+            self.quill.setText(incoming.content || '');
 
             if (incoming.owner == self.id) {
                 $('#share-button').show();
@@ -40,7 +40,9 @@ clientConnection.handleMessage = function(self, incoming) {
                         $(this).dialog('close');
                     }
                 }
-            })
+            });
+        case 'pong':
+            break;
         default:
             console.warn('Unknown message in client-slave', incoming);
             break;

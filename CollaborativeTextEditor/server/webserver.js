@@ -45,7 +45,7 @@ function init(self, callback) {
             }, (err, data) => {
                 if (err) {
                     res.status(500).end();
-                    throw err;
+                    console.error(err);
                 } else {
                     if (data.Items.length) {
                         if (data.Items[0].password === req.body.password) {
@@ -91,8 +91,7 @@ function init(self, callback) {
             DocID: uuid(),
             DocShareID: uuid(),
             title: 'Untitled Document',
-            ownr: req.body.client_id,
-            content: ''
+            ownr: req.body.client_id
         };
         self.docClient.put({
             TableName: 'documents',
@@ -100,6 +99,7 @@ function init(self, callback) {
         }, (err) => {
             if (err) {
                 res.status(500).end();
+                throw err;
             } else {
                 let mmPort = self.getBalancedMaster();
                 self.masterDocuments[mmPort] = self.masterDocuments[mmPort] || [];
@@ -119,6 +119,7 @@ function init(self, callback) {
         let mmPort = null;
         for (let port in self.masterDocuments) {
             if (self.masterDocuments[port].indexOf(req.body.document_id) !== -1) {
+                console.log('Master exists to handle doc', port);
                 mmPort = port;
                 break;
             }
@@ -126,6 +127,7 @@ function init(self, callback) {
 
         if (mmPort === null) {
             mmPort = self.getBalancedMaster();
+            console.log('Balanced master', mmPort, self.masterClientPorts);
             self.masterDocuments[mmPort] = self.masterDocuments[mmPort] || [];
             self.masterDocuments[mmPort].push(req.body.document_id);
         }
