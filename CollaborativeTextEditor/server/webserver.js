@@ -101,6 +101,8 @@ function init(self, callback) {
                 res.status(500).end();
             } else {
                 let mmPort = self.getBalancedMaster();
+                self.masterDocuments[mmPort] = self.masterDocuments[mmPort] || [];
+                self.masterDocuments[mmPort].push(doc.DocID);
 
                 res.setHeader('Content-Type', 'application/json');
                 res.end(JSON.stringify({
@@ -111,6 +113,29 @@ function init(self, callback) {
                 }));
             }
         });
+    });
+    self.webServer.post('/open_document', (req, res) => {
+        let mmPort = null;
+        for (let port in self.masterDocuments) {
+            if (self.masterDocuments[port].indexOf(req.body.document_id) !== -1) {
+                mmPort = port;
+                break;
+            }
+        }
+
+        if (mmPort === null) {
+            mmPort = self.getBalancedMaster();
+            self.masterDocuments[mmPort] = self.masterDocuments[mmPort] || [];
+            self.masterDocuments[mmPort].push(req.body.document_id);
+        }
+
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({
+            payload: {
+                port: self.masterClientPorts[mmPort],
+                document_id: req.body.document_id
+            }
+        }));
     });
     self.webServer.use(express.static('../client/'));
 

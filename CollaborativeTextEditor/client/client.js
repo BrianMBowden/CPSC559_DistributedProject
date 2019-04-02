@@ -66,6 +66,46 @@ $(document).ready((e) => {
           error: self.handleError
         });
       });
+
+      $('#open-button').click((e) => {
+          if (self.ownedDocuments.length) {
+              let dialog = $(`
+                  <div>
+                      Choose a Document:
+                      <select name="opendoc">
+                          <option disabled selected>Please pick a document</option>
+                      </select>
+                  </div>
+              `);
+              for (let document of self.ownedDocuments) {
+                  dialog.find('select').append($(`<option value="${document.id}">${document.title}</option>`));
+              }
+              dialog.find('select').selectmenu();
+              dialog.dialog({
+                modal: true,
+                width: 600,
+                buttons: {
+                    Open: function() {
+                        dialog.dialog('close');
+                        self.openFile(dialog.find('select').val());
+                    },
+                    Cancel: function() {
+                        dialog.dialog('close');
+                    }
+                }
+              });
+          } else {
+              $('<div>You have no documents to open.</div>').dialog({
+                  modal: true,
+                  width: 600,
+                  buttons: {
+                      Ok: function() {
+                          $(this).dialog('close');
+                      }
+                  }
+              });
+          }
+      });
     };
 
     self.connectToMaster = function(port, callback) {
@@ -170,6 +210,33 @@ $(document).ready((e) => {
           callback(e);
         }
       });
+    };
+
+    self.openFile = function(document_id) {
+        $.ajax({
+          url: '/open_document',
+          type: 'POST',
+          data: {
+            action: 'join',
+            client_id: self.id,
+            document_id: document_id
+          },
+          success: function(data) {
+            self.connectToMaster(data.payload.port, (err) => {
+              if (err) {
+                self.handleError(err);
+                return;
+              }
+
+              self.sendSlave({
+                action: 'open_document',
+                client_id: self.id,
+                document_id: document_id
+              });
+            });
+          },
+          error: self.handleError
+        });
     };
 
     self.handleError = function(error) {

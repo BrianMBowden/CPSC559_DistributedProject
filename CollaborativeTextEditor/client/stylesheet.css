@@ -1,3 +1,11 @@
+.ui-selectmenu-open {
+    z-index: 9999 !important;
+}
+
+.ui-selectmenu-menu .ui-menu {
+    max-height: 200px;
+}
+
 #doc {
     background-color: white;
     display: none;
