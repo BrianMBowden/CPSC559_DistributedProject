@@ -5,6 +5,7 @@ const child_process = require("child_process");
 const killPort = require('kill-port');
 const fs = require('fs');
 const AWS = require('aws-sdk');
+const Automerge = require('automerge');
 
 const conf = require('./conf.json');
 const awsConf = require('./aws.json');
@@ -128,7 +129,45 @@ let MasterServer = function() {
                 self.electPrimary();
             }
         }, 1000);
+
+        setInterval(function() {
+            let savedDocuments = [];
+
+            for (let client of self.clients) {
+                if (client.pendingChanges) {
+                    if (savedDocuments.indexOf(client.document) === -1) {
+                        savedDocuments.push(client.document);
+                        self.saveDocument(client.document, client.crdt, (err) => {
+                            if (err) {
+                                console.log(err);
+                            } else {
+                                client.pendingChanges = false;
+                            }
+                        })
+                    } else {
+                        // another client already saved/is saving
+                        client.pendingChanges = false;
+                    }
+                }
+            }
+        }, conf.documentWriteInterval);
     }
+
+    self.saveDocument = function(document, crdt, callback) {
+        console.log('Saving document', document);
+        self.docClient.update({
+            TableName: 'documents',
+            Key: {
+                'DocID': document
+            },
+            UpdateExpression: 'set content = :c',
+            ExpressionAttributeValues: {
+                ':c': Automerge.save(crdt)
+            }
+        }, (err) => {
+            callback(err);
+        })
+    };
 
     self.processMasterPorts = function(ports) {
         for (let port of ports) {
@@ -397,8 +436,16 @@ let MasterServer = function() {
     self.deadClient = function(client_id) {
         console.log(`client ${client_id} has died`);
         for (let i = 0; i < self.clients.length; i++) {
-            if (self.clients[i].id === client_id) {
+            if (self.clients[i]._thisClient === client_id) {
                 let client = self.clients.splice(i, 1);
+
+                if (client.pendingChanges) {
+                    self.saveDocument(client.document, client.crdt, (err) => {
+                        if (err) {
+                            console.log(err);
+                        }
+                    });
+                }
                 delete client;
                 break;
             }

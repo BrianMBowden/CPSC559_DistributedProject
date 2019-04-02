@@ -3,6 +3,9 @@ window.clientConnection = window.clientConnection || {};
 clientConnection.handleMessage = function(self, incoming) {
     switch(incoming.action) {
         // SLAVE TO CLIENT
+        case 'update_document':
+            self.quill.setText(incoming.content || '');
+            break;
         case 'load_document':
             self.openDocument.id = incoming.document_id;
             self.openDocument.title = incoming.title;

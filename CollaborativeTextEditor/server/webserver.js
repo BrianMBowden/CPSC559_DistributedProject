@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const uuid = require("uuid/v4");
+const Automerge = require("automerge");
 
 const conf = require('./conf.json');
 
@@ -87,11 +88,16 @@ function init(self, callback) {
     });
     self.webServer.post('/new_document', (req, res) => {
         // create a new document, assign a master to it, give the client back the slave port
+        let content = Automerge.change(Automerge.init(), doc => {
+            doc.text = new Automerge.Text();
+        });
+
         let doc = {
             DocID: uuid(),
             DocShareID: uuid(),
             title: 'Untitled Document',
-            ownr: req.body.client_id
+            ownr: req.body.client_id,
+            content: Automerge.save(content)
         };
         self.docClient.put({
             TableName: 'documents',

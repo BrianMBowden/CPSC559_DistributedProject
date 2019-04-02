@@ -3,5 +3,6 @@
     "minMasters": 1,
     "heartbeatInterval": 10000,
     "electionWaitTime": 1000,
-    "maxWebServerAttempts": 10
+    "maxWebServerAttempts": 10,
+    "documentWriteInterval": 10000
 }

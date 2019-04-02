@@ -8,9 +8,9 @@ Delete files []
 Join files [x]
 Share files [x]
 
-Edit files []
-Save files []
-Concurrently edit files []
+Edit files [x]
+Save files [x]
+Concurrently edit files [x]
 Show cursors []
 
 Demo reqs:
