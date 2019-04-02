@@ -26,6 +26,29 @@
   /* background: #A0C5E8; */
 }
 
+body{
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  background: #498e96
+}
+
+
+#pass, #user, #submit{
+border: 0;
+background: none;
+display: block;
+margin: 20px auto;
+test-align: center;
+border: 2px solid #a8d8de;
+padding: 14px 10px;
+width: 125px;
+outline: none;
+color: white;
+border-radius: 24px;
+cursor: pointer
+}
+
 /*******  start: button css *******/
 
 #open-button, #export-button, #exit-button, #join-button, #share-button, #new-button, #rename-button{
