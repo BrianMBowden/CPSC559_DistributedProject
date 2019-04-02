@@ -1,0 +1,28 @@
+Features:
+````````````
+Create files []
+Open files []
+Rename files []
+Export files []
+Delete files []
+Join files []
+Share files []
+
+
+Demo reqs:
+``````````
+
+REPLICATION:
+Slave server replication []
+Master server replication []
+DB replication []
+
+CONSISTENCY:
+consistency across clients []
+consistency across DB []
+
+FAULT TOLERANCE:
+Client goes down []
+Slave goes down []
+Master goes down []
+DB table goes down []
