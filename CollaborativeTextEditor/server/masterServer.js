@@ -33,6 +33,7 @@ let MasterServer = function() {
     self.clientSocketServer = null;
 
     self.masters = [];
+    self.clients = [];
 
     self.documents = [];
 
@@ -73,6 +74,8 @@ let MasterServer = function() {
             self.clientSocketServer.on('connection', function connection(ws) {
                 let cli = new client.Client(self, ws);
                 ws.__client = cli;
+
+                self.clients.push(cli);
 
                 ws.on('close', function() {
                     console.log('Client has disconnected');
@@ -381,6 +384,17 @@ let MasterServer = function() {
             self.createMasterIfRequired(() => {
                 // ok
             });
+        }
+    };
+
+    self.deadClient = function(client_id) {
+        console.log(`client ${client_id} has died`);
+        for (let i = 0; i < self.clients.length; i++) {
+            if (self.clients[i].id === client_id) {
+                let client = self.clients.splice(i, 1);
+                delete client;
+                break;
+            }
         }
     };
 };
