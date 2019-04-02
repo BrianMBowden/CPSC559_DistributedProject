@@ -10,6 +10,12 @@ $(document).ready((e) => {
     self.masterSocket = null;
     self.slaveSocket = null;
 
+    self.openDocument = {
+        id: null,
+        title: null,
+        shareId: null
+    };
+
     self.init = function() {
       $('#login input[name="submit"]').click((e) => {
         window.typeit.login($('#login input[name="username"]').val(), $('#login input[name="password"]').val(), (err) => {
@@ -88,6 +94,7 @@ $(document).ready((e) => {
               dialog.dialog({
                 modal: true,
                 width: 600,
+                title: 'Open Document',
                 buttons: {
                     Open: function() {
                         dialog.dialog('close');
@@ -109,6 +116,31 @@ $(document).ready((e) => {
                   }
               });
           }
+      });
+
+      $('#rename-button').click((e) => {
+          let input = $(`<div style="text-align: center">Document Title: <input type="text"><div>`);
+          input.find('input').val(self.openDocument.title);
+          input.dialog({
+              modal: true,
+              width: 600,
+              title: 'Rename Document',
+              buttons: {
+                  Ok: function() {
+                      input.dialog('close');
+                      self.slaveSocket.send(JSON.stringify({
+                          action: 'rename',
+                          client_id: self.id,
+                          document_id: self.openDocument.id,
+                          document_share_id: self.openDocument.shareId,
+                          new_doc_name: input.find('input').val()
+                      }));
+                  },
+                  Cancel: function() {
+                      input.dialog('close');
+                  }
+              }
+          });
       });
     };
 

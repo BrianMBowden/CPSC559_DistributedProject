@@ -28,7 +28,7 @@
 
 /*******  start: button css *******/
 
-#open-button, #export-button, #exit-button, #join-button, #share-button, #new-button{
+#open-button, #export-button, #exit-button, #join-button, #share-button, #new-button, #rename-button{
   font-size: 16px;
   border-radius: 4px;
   cursor:pointer;
@@ -38,14 +38,14 @@
 
 } */
 
-#open-button, #export-button, #exit-button, #join-button, #share-button,  #new-button{
+#open-button, #export-button, #exit-button, #join-button, #share-button,  #new-button, #rename-button{
   background-color: white;
   color: black;
   border: 2px solid #555555;
   width: 95px;
 }
 
-#open-button:hover, #export-button:hover, #exit-button:hover, #join-button:hover, #share-button:hover,  #new-button:hover{
+#open-button:hover, #export-button:hover, #exit-button:hover, #join-button:hover, #share-button:hover,  #new-button:hover, #rename-button:hover{
   background-color: #555555;
   color: white;
 }

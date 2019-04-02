@@ -51,6 +51,10 @@ portfinder.getPort((err, port) => {
                     client_id = incoming.client_id;
                     process.send(incoming);
                     break;
+                case 'rename':
+                    // write request - goes through master
+                    process.send(incoming);
+                    break;
                 default:
                     console.log('unknown action on slave-client socket', incoming.action);
                     break;

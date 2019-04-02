@@ -30,6 +30,24 @@ let Client = function(masterServer, socket) {
             case 'ClientInformation':
                 self.id = incoming.client_id;
                 break;
+            case 'rename':
+                self.masterServer.docClient.update({
+                    TableName: 'documents',
+                    Key: {
+                        'DocID': incoming.document_id,
+                        'DocShareID': incoming.document_share_id
+                    },
+                    UpdateExpression: 'set title = :t',
+                    ExpressionAttributeValues: {
+                        ':t': incoming.new_doc_name
+                    }
+                }, (err) => {
+                    if (err) {
+                        // db failure?
+                        console.log(err);
+                    }
+                });
+                break;
             default:
                 console.log('unknown slave message');
                 break;
