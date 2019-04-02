@@ -21,6 +21,14 @@ $(document).ready((e) => {
             var quill = new Quill('#editor', {
               theme: 'snow'
             });
+
+            quill.on('text-change', function(delta, oldDelta, source) {
+              if (source == 'api') {
+                console.log("An API call triggered this change.");
+              } else if (source == 'user') {
+                console.log("src = user, entered[" + quill.getText() + ", offset: " + quill.offset() + "]");
+              }
+            });
           }
         });
       });
