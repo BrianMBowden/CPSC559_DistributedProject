@@ -4,7 +4,16 @@ clientConnection.handleMessage = function(self, incoming) {
     switch(incoming.action) {
         // SLAVE TO CLIENT
         case 'update_document':
+            let range = self.quill.getSelection();
             self.quill.setText(incoming.content || '');
+            self.quill.setSelection(range);
+            break;
+        case 'update_cursor':
+            if (!self.cursors.hasOwnProperty(incoming.client_instance) && self._instance !== incoming.client_instance) {
+                self.cursors[incoming.client_instance] = self.cursorsModule.createCursor(incoming.client_instance, incoming.client_username, randomColor());
+            }
+
+            self.cursorsModule.moveCursor(incoming.client_instance, incoming.cursor);
             break;
         case 'load_document':
             self.openDocument.id = incoming.document_id;

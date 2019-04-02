@@ -11,6 +11,9 @@ $(document).ready((e) => {
     self.slaveSocket = null;
     self.quill = null;
     self.requestedClose = false;
+    self._instance = uuid();
+    self.cursors = {};
+    self.cursorsModule = null;
 
     self.openDocument = {
         id: null,
@@ -55,9 +58,14 @@ $(document).ready((e) => {
               }
             $('#login').hide();
             $('#doc').show();
+            Quill.register('modules/cursors', QuillCursors);
             self.quill = new Quill('#editor', {
-              theme: 'snow'
+              theme: 'snow',
+              modules: {
+                  cursors: true
+              }
             });
+            self.cursorsModule = self.quill.getModule('cursors');
 
             self.quill.setText('');
             self.quill.disable();
@@ -125,6 +133,16 @@ $(document).ready((e) => {
                     });
                 }
               }
+            });
+
+            self.quill.on('selection-change', (e) => {
+                self.sendSlave({
+                    action: 'cursor_change',
+                    client_id: self.id,
+                    client_username: self.username,
+                    client_instance: self._instance,
+                    cursor: e
+                });
             });
           }
         });

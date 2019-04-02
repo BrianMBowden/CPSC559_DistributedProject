@@ -67,6 +67,9 @@ process.on('message', (incoming) => {
         case 'update_document':
             socket.send(JSON.stringify(incoming));
             break;
+        case 'update_cursor':
+            socket.send(JSON.stringify(incoming));
+            break;
         default:
             console.log('Unknown action', incoming);
             break;
@@ -116,6 +119,9 @@ portfinder.getPort((err, port) => {
                     break;
                 case 'insert':
                 case 'delete':
+                    process.send(incoming);
+                    break;
+                case 'cursor_change':
                     process.send(incoming);
                     break;
                 case 'ping':

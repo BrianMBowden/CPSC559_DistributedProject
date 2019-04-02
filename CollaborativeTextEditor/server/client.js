@@ -147,6 +147,21 @@ let Client = function(masterServer, socket) {
 
                 self.pendingChanges = true;
                 break;
+            case 'cursor_change':
+                for (let client of self.masterServer.clients) {
+                    if (client.document === self.document) {
+                        if (client._thisClient !== self._thisClient) {
+                            client.slave.send({
+                                action: 'update_cursor',
+                                client_id: incoming.client_id,
+                                client_username: incoming.client_username,
+                                client_instance: incoming.client_instance,
+                                cursor: incoming.cursor
+                            });
+                        }
+                    }
+                }
+                break;
             default:
                 console.log('unknown slave message');
                 break;
