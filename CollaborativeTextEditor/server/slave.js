@@ -1,5 +1,5 @@
 const ws = require('ws');
-const portfinder = require("portfinder");
+const getPort = require('get-port');
 
 const AWS = require('aws-sdk');
 
@@ -76,14 +76,7 @@ process.on('message', (incoming) => {
     }
 });
 
-portfinder.getPort({
-    port: conf.minPort,
-    stopPort: conf.maxPort
-}, (err, port) => {
-    if (err) {
-        throw err;
-    }
-
+getPort().then(function(port) {
     let sock = new ws.Server({
         port: port
     });

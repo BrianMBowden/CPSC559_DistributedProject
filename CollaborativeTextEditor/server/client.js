@@ -1,5 +1,4 @@
 const ws = require('ws');
-const portfinder = require('ws');
 const child_process = require('child_process');
 const Automerge = require('automerge');
 const uuid = require('uuid/v4');

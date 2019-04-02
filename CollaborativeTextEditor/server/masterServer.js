@@ -1,5 +1,5 @@
 const ws = require("ws");
-const portfinder = require("portfinder");
+const getPort = require("get-port");
 const uuid = require("uuid/v4");
 const child_process = require("child_process");
 const killPort = require('kill-port');
@@ -58,14 +58,7 @@ let MasterServer = function() {
         let readyCount = 0;
 
         // accept connections from clients
-        portfinder.getPort({
-            port: conf.minPort,
-            stopPort: conf.maxPort
-        }, (err, port) => {
-            if (err) {
-                throw err;
-            }
-
+        getPort().then(function(port) {
             self.clientSocketServerPort = port;
             if (self.masterSocketServerPort) {
                 self.masterClientPorts[self.masterSocketServerPort] = self.clientSocketServerPort;
@@ -94,13 +87,7 @@ let MasterServer = function() {
         });
 
         // accept connections from masters
-        portfinder.getPort({
-            port: conf.minPort,
-            stopPort: conf.maxPort
-        }, (err, port) => {
-            if (err) {
-                throw err;
-            }
+        getPort().then(function(port) {
 
             self.masterSocketServerPort = port;
             if (self.clientSocketServerPort) {
