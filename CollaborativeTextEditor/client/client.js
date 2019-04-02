@@ -50,6 +50,9 @@ $(document).ready((e) => {
               theme: 'snow'
             });
 
+            self.quill.setText('');
+            self.quill.disable();
+
             self.quill.on('text-change', function(delta, oldDelta, source) {
               if (source == 'api') {
                 console.log("An API call triggered this change.");
@@ -110,6 +113,8 @@ $(document).ready((e) => {
         if (self.slaveSocket) {
           self.slaveSocket.close();
         }
+        self.quill.setText('');
+        self.quill.disable();
 
         $.ajax({
           url: '/new_document',
@@ -157,8 +162,13 @@ $(document).ready((e) => {
                 title: 'Open Document',
                 buttons: {
                     Open: function() {
-                        dialog.dialog('close');
-                        self.openFile(dialog.find('select').val());
+                        let doc = dialog.find('select').val();
+                        if (!doc) {
+                            alert('you gotta pick one');
+                        } else {
+                            dialog.dialog('close');
+                            self.openFile(doc);
+                        }
                     },
                     Cancel: function() {
                         dialog.dialog('close');
@@ -320,6 +330,14 @@ $(document).ready((e) => {
     };
 
     self.openFile = function(document_id) {
+        if (self.masterSocket) {
+            self.masterSocket.close();
+        }
+        if (self.slaveSocket) {
+            self.slaveSocket.close();
+        }
+        self.quill.setText('');
+        self.quill.disable();
         $.ajax({
           url: '/open_document',
           type: 'POST',

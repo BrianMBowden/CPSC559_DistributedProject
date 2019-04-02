@@ -17,6 +17,7 @@ clientConnection.handleMessage = function(self, incoming) {
 
             $('#export-button,#rename-button').show();
             $('#document-title').attr('data-document-id', incoming.document_id).text(incoming.title);
+            self.quill.enable();
             break;
         case 'rename_document':
             for (let doc of self.ownedDocuments) {
@@ -30,6 +31,16 @@ clientConnection.handleMessage = function(self, incoming) {
             }
             $(`#document-title[data-document-id="${incoming.document_id}"]`).text(incoming.new_doc_name);
             break;
+        case 'dialog':
+            $(`<div>${incoming.content}</div>`).dialog({
+                modal: true,
+                title: incoming.title,
+                buttons: {
+                    Ok: function() {
+                        $(this).dialog('close');
+                    }
+                }
+            })
         default:
             console.warn('Unknown message in client-slave', incoming);
             break;

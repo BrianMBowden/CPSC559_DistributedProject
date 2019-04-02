@@ -49,6 +49,8 @@ portfinder.getPort((err, port) => {
                 return;
             }
 
+            console.log(`[client<<]`, incoming);
+
             switch (incoming.action) {
                 // SLAVE TO CLIENT MESSAGES
                 case 'ClientInformation':
@@ -66,14 +68,22 @@ portfinder.getPort((err, port) => {
                             DocID: incoming.document_id
                         }
                     }, (err, doc) => {
-                        socket.send(JSON.stringify({
-                            action: 'load_document',
-                            document_id: doc.Item.DocID,
-                            document_share_id: doc.Item.DocShareID,
-                            title: doc.Item.title,
-                            owner: doc.Item.ownr,
-                            content: doc.Item.content
-                        }));
+                        if (doc && doc.Item) {
+                            socket.send(JSON.stringify({
+                                action: 'load_document',
+                                document_id: doc.Item.DocID,
+                                document_share_id: doc.Item.DocShareID,
+                                title: doc.Item.title,
+                                owner: doc.Item.ownr,
+                                content: doc.Item.content
+                            }));
+                        } else {
+                            socket.send(JSON.stringify({
+                                action: 'dialog',
+                                title: 'Document not found!',
+                                content: 'The document you were looking for could not be located.'
+                            }));
+                        }
                     });
                     break;
                 default:
