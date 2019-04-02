@@ -33,6 +33,10 @@ $(document).ready((e) => {
         });
       });
 
+      $('#exit-button').click((e) => {
+        location.reload();
+      });
+
       $('#new-button').click((e) => {
         if (self.masterSocket) {
           self.masterSocket.close();
@@ -190,6 +194,12 @@ $(document).ready((e) => {
         console.warn('slave connection is not open');
       }
     };
+
+    self.Exit = function(){
+      console.log('sending logout request');
+
+
+    }
 
     self.login = function(username, password, callback) {
       console.log('sending login request');
