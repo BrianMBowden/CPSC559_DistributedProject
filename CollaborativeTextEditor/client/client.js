@@ -9,6 +9,7 @@ $(document).ready((e) => {
     self.ownedDocuments = [];
     self.masterSocket = null;
     self.slaveSocket = null;
+    self.quill = null;
 
     self.openDocument = {
         id: null,
@@ -17,22 +18,43 @@ $(document).ready((e) => {
     };
 
     self.init = function() {
+        window.onerror = function(errmsg, url, lineNumber) {
+            $('<div>Uh oh :(<br />Your client has experienced an error and needs to restart</div>').dialog({
+                modal: true,
+                dialogClass: 'no-close',
+                title: 'Error',
+                buttons: {
+                    'Fine, I Guess...': function() {
+                        $(this).dialog('close');
+                        window.location.reload();
+                    }
+                }
+            });
+            return false;
+        };
+
+
       $('#login input[name="submit"]').click((e) => {
-        window.typeit.login($('#login input[name="username"]').val(), $('#login input[name="password"]').val(), (err) => {
+          $('#login_fail').text('');
+        window.typeit.login($('#login input[name="username"]').val(), $('#login input[name="password"]').val(), (err, ok) => {
           if (err) {
-            alert('invalid username/password');
+            throw err;
           } else {
+              if (!ok) {
+                  $('#login_fail').text('invalid credentials');
+                  return;
+              }
             $('#login').hide();
             $('#doc').show();
-            var quill = new Quill('#editor', {
+            self.quill = new Quill('#editor', {
               theme: 'snow'
             });
 
-            quill.on('text-change', function(delta, oldDelta, source) {
+            self.quill.on('text-change', function(delta, oldDelta, source) {
               if (source == 'api') {
                 console.log("An API call triggered this change.");
               } else if (source == 'user') {
-                console.log("src = user, entered[" + quill.getText() + "]");
+                console.log("src = user, entered[" + self.quill.getText() + "]");
               }
             });
           }
@@ -41,6 +63,44 @@ $(document).ready((e) => {
 
       $('#exit-button').click((e) => {
         location.reload();
+      });
+
+      $('#share-button').click((e) => {
+          $(`<div>Share Code: <br/><span class="code">${self.openDocument.id}</span></div>`)
+            .dialog({
+                  modal: true,
+                  title: 'Share Code',
+                  buttons: {
+                      'Thanks!': function() {
+                          $(this).dialog('close');
+                      }
+                  }
+              });
+      });
+
+      $('#join-button').click((e) => {
+          $(`<div><input type="text" placeholder="Share Code" class="code"></div>`)
+            .dialog({
+                  modal: true,
+                  title: 'Join Document',
+                  buttons: {
+                      Join: function() {
+                          $(this).dialog('close');
+                          self.openFile($(this).find('input').val());
+                      },
+                      Cancel: function() {
+                          $(this).dialog('close');
+                      }
+                  }
+              });
+      });
+
+      $('#export-button').click((e) => {
+          let file = new Blob([self.quill.getText()], {type: 'text/plain'});
+          let a = document.createElement('a');
+          a.href = URL.createObjectURL(file);
+          a.download = `${self.openDocument.title}.txt`;
+          a.click();
       });
 
       $('#new-button').click((e) => {
@@ -132,7 +192,6 @@ $(document).ready((e) => {
                           action: 'rename',
                           client_id: self.id,
                           document_id: self.openDocument.id,
-                          document_share_id: self.openDocument.shareId,
                           new_doc_name: input.find('input').val()
                       }));
                   },
@@ -197,7 +256,7 @@ $(document).ready((e) => {
 
           console.log('slave <<', incoming);
 
-          clientConnection.handleMessage(self, message);
+          clientConnection.handleMessage(self, incoming);
         };
 
         self.slaveSocket.onclose = function() {
@@ -229,29 +288,35 @@ $(document).ready((e) => {
 
     self.Exit = function(){
       console.log('sending logout request');
-
+      $('body').css('background', '#498e96');
 
     }
 
     self.login = function(username, password, callback) {
-      console.log('sending login request');
-      $.ajax({
-        url: '/login',
-        type: 'POST',
-        data: {
-          username: username,
-          password: password
-        },
-        success: function(data) {
-          self.id = data.client_id;
-          self.username = data.payload.username;
-          self.ownedDocuments = data.payload.owned_documents;
-          callback();
-        },
-        error: function(e) {
-          callback(e);
-        }
-      });
+      if (username && password) {
+          $.ajax({
+            url: '/login',
+            type: 'POST',
+            data: {
+              username: username,
+              password: password
+            },
+            success: function(data) {
+              $('body').css('background', 'none');
+              self.id = data.client_id;
+              self.username = data.payload.username;
+              self.ownedDocuments = data.payload.owned_documents;
+              callback(null, true);
+            },
+            error: function(e) {
+                if (e.status === 403) {
+                    callback(null, false);
+                } else {
+                    callback(e, false);
+                }
+            }
+          });
+      }
     };
 
     self.openFile = function(document_id) {
@@ -283,6 +348,7 @@ $(document).ready((e) => {
 
     self.handleError = function(error) {
       console.log(error);
+      throw error;
     };
   }).apply(window.typeit);
 

@@ -24,6 +24,7 @@
                 <input name="username" type="text" placeholder="username" id="user">
                 <input name="password" type="password" placeholder="password" id="pass">
                 <input name="submit" type="button" value="login" id="submit">
+                <div id="login_fail"></div>
             </div>
         </div>
 
@@ -31,13 +32,14 @@
             <div id="controls">
                 <input type="button" value="Open File" id="open-button">
                 <input type="button" value="New File" id="new-button">
-                <input type="button" value="Export" id="export-button">
+                <input type="button" value="Export" id="export-button" hidden>
                 <input type="button" value="Logout" id="exit-button">
                 <input type="button" value="Join" id="join-button">
-                <input type="button" value="Share" id="share-button">
-                <input type="button" value="Rename" id="rename-button">
+                <input type="button" value="Share" id="share-button" hidden>
+                <input type="button" value="Rename" id="rename-button" hidden>
             </div>
             <!-- <div id="editor" contenteditable> -->
+            <div id="document-title" data-document-id=""></div>
             <div id="editor" >
             </div>
         </div>

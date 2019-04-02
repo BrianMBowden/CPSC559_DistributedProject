@@ -1,13 +1,17 @@
 Features:
 ````````````
-Create files []
-Open files []
-Rename files []
-Export files []
+Create files [x]
+Open files [x]
+Rename files [x]
+Export files [x]
 Delete files []
-Join files []
-Share files []
+Join files [x]
+Share files [x]
 
+Edit files []
+Save files []
+Concurrently edit files []
+Show cursors []
 
 Demo reqs:
 ``````````
@@ -22,7 +26,13 @@ consistency across clients []
 consistency across DB [x]
 
 FAULT TOLERANCE:
-Client goes down []
+Client goes down [x]
 Slave goes down [x]
 Master goes down [x]
 DB table goes down [x]
+
+
+
+oopsies
+- share is using DocID right now
+- rename events are broadcast to all clients on the master

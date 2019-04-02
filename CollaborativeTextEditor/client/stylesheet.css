@@ -6,6 +6,23 @@
     max-height: 200px;
 }
 
+.no-close .ui-dialog-titlebar-close {
+    display: none;
+}
+
+#login input::placeholder {
+    color: white;
+}
+
+#login_fail {
+    color: #a40000;
+    text-align: center;
+}
+
+.code {
+    font-family: monospace;
+    font-size: 12px;
+}
 #doc {
     background-color: white;
     display: none;

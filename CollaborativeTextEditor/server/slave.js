@@ -16,6 +16,9 @@ let docClient = new AWS.DynamoDB.DocumentClient();
 process.on('message', (incoming) => {
     switch(incoming.action) {
         // MASTER TO SLAVE MESSAGES
+        case 'rename_document':
+            socket.send(JSON.stringify(incoming));
+            break;
         default:
             console.log('Unknown action', incoming);
             break;
@@ -27,17 +30,18 @@ portfinder.getPort((err, port) => {
         throw err;
     }
 
-    socket = new ws.Server({
+    let sock = new ws.Server({
         port: port
     });
 
-    socket.on('connection', (ws) => {
-        ws.on('close', () => {
+    sock.on('connection', (ws) => {
+        socket = ws;
+        socket.on('close', () => {
             console.log('client went away. Killing slave');
             process.exit(1);
         });
 
-        ws.on('message', (message) => {
+        socket.on('message', (message) => {
             try {
                 var incoming = JSON.parse(message);
             } catch (e) {
@@ -54,6 +58,23 @@ portfinder.getPort((err, port) => {
                 case 'rename':
                     // write request - goes through master
                     process.send(incoming);
+                    break;
+                case 'open_document':
+                    docClient.get({
+                        TableName: 'documents',
+                        Key: {
+                            DocID: incoming.document_id
+                        }
+                    }, (err, doc) => {
+                        socket.send(JSON.stringify({
+                            action: 'load_document',
+                            document_id: doc.Item.DocID,
+                            document_share_id: doc.Item.DocShareID,
+                            title: doc.Item.title,
+                            owner: doc.Item.ownr,
+                            content: doc.Item.content
+                        }));
+                    });
                     break;
                 default:
                     console.log('unknown action on slave-client socket', incoming.action);

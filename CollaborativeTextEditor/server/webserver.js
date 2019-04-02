@@ -91,7 +91,8 @@ function init(self, callback) {
             DocID: uuid(),
             DocShareID: uuid(),
             title: 'Untitled Document',
-            ownr: req.body.client_id
+            ownr: req.body.client_id,
+            content: ''
         };
         self.docClient.put({
             TableName: 'documents',

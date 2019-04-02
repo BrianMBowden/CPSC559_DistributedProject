@@ -34,8 +34,7 @@ let Client = function(masterServer, socket) {
                 self.masterServer.docClient.update({
                     TableName: 'documents',
                     Key: {
-                        'DocID': incoming.document_id,
-                        'DocShareID': incoming.document_share_id
+                        'DocID': incoming.document_id
                     },
                     UpdateExpression: 'set title = :t',
                     ExpressionAttributeValues: {
@@ -45,6 +44,14 @@ let Client = function(masterServer, socket) {
                     if (err) {
                         // db failure?
                         console.log(err);
+                    } else {
+                        for (let client of self.masterServer.clients) {
+                            client.slave.send({
+                                action: 'rename_document',
+                                document_id: incoming.document_id,
+                                new_doc_name: incoming.new_doc_name
+                            });
+                        }
                     }
                 });
                 break;
