@@ -76,7 +76,10 @@ process.on('message', (incoming) => {
     }
 });
 
-portfinder.getPort((err, port) => {
+portfinder.getPort({
+    port: conf.minPort,
+    stopPort: conf.maxPort
+}, (err, port) => {
     if (err) {
         throw err;
     }

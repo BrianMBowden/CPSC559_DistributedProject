@@ -58,7 +58,10 @@ let MasterServer = function() {
         let readyCount = 0;
 
         // accept connections from clients
-        portfinder.getPort((err, port) => {
+        portfinder.getPort({
+            port: conf.minPort,
+            stopPort: conf.maxPort
+        }, (err, port) => {
             if (err) {
                 throw err;
             }
@@ -91,7 +94,10 @@ let MasterServer = function() {
         });
 
         // accept connections from masters
-        portfinder.getPort((err, port) => {
+        portfinder.getPort({
+            port: conf.minPort,
+            stopPort: conf.maxPort
+        }, (err, port) => {
             if (err) {
                 throw err;
             }
@@ -438,14 +444,6 @@ let MasterServer = function() {
         for (let i = 0; i < self.clients.length; i++) {
             if (self.clients[i]._thisClient === client_id) {
                 let client = self.clients.splice(i, 1);
-
-                if (client.pendingChanges) {
-                    self.saveDocument(client.document, client.crdt, (err) => {
-                        if (err) {
-                            console.log(err);
-                        }
-                    });
-                }
                 delete client;
                 break;
             }

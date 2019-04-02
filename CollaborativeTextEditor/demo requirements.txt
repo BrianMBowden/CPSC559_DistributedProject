@@ -11,7 +11,7 @@ Share files [x]
 Edit files [x]
 Save files [x]
 Concurrently edit files [x]
-Show cursors []
+Show cursors [~]
 
 Demo reqs:
 ``````````

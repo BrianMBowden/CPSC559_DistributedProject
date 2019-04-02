@@ -169,6 +169,13 @@ let Client = function(masterServer, socket) {
     });
 
     self.slave.on('close', () => {
+        if (self.pendingChanges) {
+            self.masterServer.saveDocument(self.document, self.crdt, (err) => {
+                if (err) {
+                    console.log(err);
+                }
+            });
+        }
         self.masterServer.deadClient(self._thisClient);
     });
 };
