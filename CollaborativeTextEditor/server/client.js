@@ -17,6 +17,12 @@ let Client = function(masterServer, socket) {
 
     self.slave.on('message', function(incoming) {
         console.log('[slave<<]', incoming);
+
+	var DocId = null;
+	var Offset = null;
+	var Data = null;
+	
+	
         switch (incoming.action) {
             // SLAVE TO MASTER MESSAGES
             case 'SlaveReady':
@@ -25,8 +31,25 @@ let Client = function(masterServer, socket) {
                     port: incoming.port
                 }));
                 self.socket.close();
-                break;
-            default:
+            break;
+	case "insert":
+	    DocId = incoming.document_id;
+	    data = incoming.payload.data;
+	    offset = incoming.payload.offset;
+	    
+	    /* Add the data to the database */
+	    
+	    console.log ("Will add character :" + data + " at offset :" + offset); /* <<DBUG>> */
+	    break;
+	case "delete":
+	    DocId = incoming.document_id;
+	    offset = incoming.payload.offset;
+
+	    /* Remove data from the database */
+	    
+	    console.log ("Will delete 1 character at :" + offset); /* <<DBUG>> */
+	    break;
+	default:
                 console.log('unknown slave message');
                 break;
         }

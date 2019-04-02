@@ -23,19 +23,45 @@ $(document).ready((e) => {
               theme: 'snow'
             });
 
-	      var lastKey = null;
-
-	      $('#editor').keypress((e) => {
-		  lastKey = e.key;
-	      });
-	      
 	      quill.on ('text-change', function (delta, oldDelta, source)
 			{
-			    
-			    var range = quill.getSelection (true);
-			    let offset = range.index;
-			    self.sendSlave (`{"action":"insert", "client_id":${self.id}, "document_id":"${self.currentDoc}", "payload":{"data_type":"text", "offset":${offset}, "length":1, "data":"${lastKey}"}}`);
-			    lastKey = null;
+			    var offset = null;
+			    var data = null;
+			    var insert = null;
+			    console.log (delta); /* <<DBUG>> */
+
+			    /* Insert does not have any characters to retain */
+			    if (delta.ops[0].hasOwnProperty ('insert'))
+			    {
+				offset = 0;
+				data = delta.ops[0].insert;
+				insert = true;
+			    }
+			    /* Delete does not have any characters to retain */
+			    else if (delta.ops[0].hasOwnProperty ('delete'))
+			    {
+				offset = 0;
+				insert = false;
+			    }
+			    /* Insert has characters to retain */
+			    else if (delta.ops[1].hasOwnProperty ('insert'))
+			    {
+				offset = delta.ops[0].retain;
+				data = delta.ops[1].insert;
+				insert = true;
+			    }
+			    /* Delete has characters to retain */
+			    else
+			    {
+				offset = delta.ops[0].retain;
+				insert = false;
+			    }
+
+			    /* Send "insert" message */
+			    if (insert)
+				self.sendSlave (JSON.parse (`{"action":"insert", "client_id":"${self.id}", "document_id":"${self.currentDoc}", "payload":{"data_type":"text", "offset":${offset}, "length":1, "data":"${data}"}}`));
+			    else /* Send "remove" message */
+				self.sendSlave (JSON.parse (`{"action":"delete", "client_id":"${self.id}", "document_id":"${self.currentDoc}", "payload":{"data_type":"text", "offset":${offset}, "length":1}}`));
 			});
 	  }
 	});
@@ -148,7 +174,7 @@ $(document).ready((e) => {
 
     self.sendSlave = function(data) {
       if (self.slaveSocket) {
-        console.log('slave >>', data);
+          console.log('slave >>', data);
         self.slaveSocket.send(JSON.stringify(data));
       } else {
         console.warn('slave connection is not open');

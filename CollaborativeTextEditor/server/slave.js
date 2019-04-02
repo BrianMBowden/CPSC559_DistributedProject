@@ -42,11 +42,18 @@ portfinder.getPort((err, port) => {
                 console.log('bad message on slave-client socket', message);
                 return;
             }
-
+	    console.log ("This is my message :" + incoming);
+	    
             switch (incoming.action) {
                 // SLAVE TO CLIENT MESSAGES
-                default:
-                    console.log('unknown action on slave-client socket', incoming.action);
+		
+	    case "insert":
+		process.send (incoming); /* Simply pass the message onto the master server */
+		break;
+	    case "delete":
+		process.send (incoming); /* Simply pass the message onto the master server */
+	    default:
+                console.log('unknown action on slave-client socket', incoming.action);
                     break;
             }
         });
