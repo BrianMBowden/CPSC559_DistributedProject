@@ -10,6 +10,7 @@ let Client = function(masterServer, socket) {
     self.masterServer = masterServer;
     self.socket = socket;
     self.id = null;
+    self.document = null;
 
     console.log(`Client connected to master`);
 
@@ -26,6 +27,9 @@ let Client = function(masterServer, socket) {
                 }));
                 self.socket.close();
                 break;
+            case 'ClientInformation':
+                self.id = incoming.client_id;
+                break;
             default:
                 console.log('unknown slave message');
                 break;
@@ -33,7 +37,7 @@ let Client = function(masterServer, socket) {
     });
 
     self.slave.on('close', () => {
-        console.log('Client detached');
+        self.masterServer.deadClient(self.id);
     });
 };
 

@@ -86,11 +86,11 @@ $(document).ready((e) => {
 
           switch(incoming.action) {
             case 'ClientHello':
-            self.masterSocket.close();
-            self.masterSocket = null;
-            self.connectToSlave(incoming.port, callback);
-            // if we're adding more things to master-client we need to change this
-            break;
+                self.masterSocket.close();
+                self.masterSocket = null;
+                self.connectToSlave(incoming.port, callback);
+                // if we're adding more things to master-client we need to change this
+                break;
             default:
             console.warn('unknown message on client-master socket');
             break;
@@ -106,6 +106,11 @@ $(document).ready((e) => {
     self.connectToSlave = function(port, callback) {
       self.slaveSocket = new WebSocket(`ws://localhost:${port}`);
       self.slaveSocket.onopen = function() {
+        console.log('Connected to slave', port);
+        self.slaveSocket.send(JSON.stringify({
+            action: 'ClientInformation',
+            client_id: self.id
+        }));
         self.slaveSocket.onmessage = function(message) {
           try {
             var incoming = JSON.parse(message.data);

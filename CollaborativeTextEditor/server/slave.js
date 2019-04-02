@@ -8,6 +8,7 @@ const awsConf = require('./aws.json');
 const automerge = require('automerge');
 
 let socket = null;
+let client_id = null;
 
 AWS.config.update(awsConf.aws);
 let docClient = new AWS.DynamoDB.DocumentClient();
@@ -32,6 +33,7 @@ portfinder.getPort((err, port) => {
 
     socket.on('connection', (ws) => {
         ws.on('close', () => {
+            console.log('client went away. Killing slave');
             process.exit(1);
         });
 
@@ -45,6 +47,10 @@ portfinder.getPort((err, port) => {
 
             switch (incoming.action) {
                 // SLAVE TO CLIENT MESSAGES
+                case 'ClientInformation':
+                    client_id = incoming.client_id;
+                    process.send(incoming);
+                    break;
                 default:
                     console.log('unknown action on slave-client socket', incoming.action);
                     break;
