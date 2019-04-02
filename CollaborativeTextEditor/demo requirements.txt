@@ -13,16 +13,16 @@ Demo reqs:
 ``````````
 
 REPLICATION:
-Slave server replication []
-Master server replication []
-DB replication []
+Slave server replication [x]
+Master server replication [x]
+DB replication [x]
 
 CONSISTENCY:
 consistency across clients []
-consistency across DB []
+consistency across DB [x]
 
 FAULT TOLERANCE:
 Client goes down []
-Slave goes down []
-Master goes down []
-DB table goes down []
+Slave goes down [x]
+Master goes down [x]
+DB table goes down [x]
