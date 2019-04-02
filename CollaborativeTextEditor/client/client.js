@@ -4,12 +4,13 @@ $(document).ready((e) => {
   (function() {
     let self = this;
 
-    self.id = null;
-    self.username = null;
-    self.ownedDocuments = [];
-    self.masterSocket = null;
-    self.slaveSocket = null;
-
+      self.id = null;
+      self.username = null;
+      self.ownedDocuments = [];
+      self.masterSocket = null;
+      self.slaveSocket = null;
+      self.currentDoc = null;
+      
     self.init = function() {
       $('#login input[name="submit"]').click((e) => {
         window.typeit.login($('#login input[name="username"]').val(), $('#login input[name="password"]').val(), (err) => {
@@ -21,11 +22,27 @@ $(document).ready((e) => {
             var quill = new Quill('#editor', {
               theme: 'snow'
             });
-          }
-        });
+
+	      var lastKey = null;
+
+	      $('#editor').keypress((e) => {
+		  lastKey = e.key;
+	      });
+	      
+	      quill.on ('text-change', function (delta, oldDelta, source)
+			{
+			    
+			    var range = quill.getSelection (true);
+			    let offset = range.index;
+			    self.sendSlave (`{"action":"insert", "client_id":${self.id}, "document_id":"${self.currentDoc}", "payload":{"data_type":"text", "offset":${offset}, "length":1, "data":"${lastKey}"}}`);
+			    lastKey = null;
+			});
+	  }
+	});
       });
 
-      $('#new-button').click((e) => {
+
+	$('#new-button').click((e) => {
         if (self.masterSocket) {
           self.masterSocket.close();
         }
@@ -47,7 +64,7 @@ $(document).ready((e) => {
                 self.handleError(err);
                 return;
               }
-
+		self.currentDoc = data.payload.document.DocID;
               self.sendSlave({
                 action: 'open_document',
                 client_id: self.id,
@@ -107,7 +124,7 @@ $(document).ready((e) => {
           }
 
           console.log('slave <<', incoming);
-
+	    
           clientConnection.handleMessage(self, message);
         };
 
