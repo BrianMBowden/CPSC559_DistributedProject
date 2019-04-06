@@ -3,6 +3,7 @@
 <html>
     <head>
         <title>TypeIt</title>
+        <link rel="icon" href="favicon.png" type="image/png">
         <link rel="stylesheet" type="text/css" href="/stylesheet.css">
         <script src="/jquery.min.js"></script>
         <script src="/jquery-ui.js"></script>
@@ -22,11 +23,19 @@
     </head>
     <body>
         <div id="login">
-            <div>
-                <input name="username" type="text" placeholder="username" id="user">
-                <input name="password" type="password" placeholder="password" id="pass">
-                <input name="submit" type="button" value="login" id="submit">
-                <div id="login_fail"></div>
+            <div class="left">
+                <img src="/logo.png">
+            </div>
+            <div class="right">
+                <div>
+                    <span id="login_fail"></span>
+                    <label for="user">User Name</label>
+                    <input name="username" type="text" placeholder="username" id="user">
+
+                    <label for="pass">Password</label>
+                    <input name="password" type="password" placeholder="password" id="pass">
+                    <input name="submit" type="button" value="Sign In" id="submit">
+                </div>
             </div>
         </div>
 

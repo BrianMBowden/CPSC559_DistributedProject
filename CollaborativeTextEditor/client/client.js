@@ -53,7 +53,7 @@ $(document).ready((e) => {
             throw err;
           } else {
               if (!ok) {
-                  $('#login_fail').text('invalid credentials');
+                  $('#login_fail').text('Invalid Credentials');
                   return;
               }
             $('#login').hide();
