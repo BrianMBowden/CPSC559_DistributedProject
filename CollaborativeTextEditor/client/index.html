@@ -5,23 +5,24 @@
         <title>TypeIt</title>
         <link rel="icon" href="favicon.png" type="image/png">
         <link rel="stylesheet" type="text/css" href="/stylesheet.css">
+
+        <!-- lib imports -->
         <script src="/lib/jquery.min.js"></script>
         <script src="/lib/jquery-ui.js"></script>
         <link rel="stylesheet" href="/lib/jquery-ui.css" type="text/css">
-        <script type="text/javascript" src="/client.js"></script>
-        <script type="text/javascript" src="/clientConnection.js"></script>
-        <script type="text/javascript" src="/lib/quill-cursors.js"></script>
         <script src="/lib/uuid.js"></script>
         <script src="/lib/randomcolor.js"></script>
-
-        <!-- Include stylesheet for editor-->
+        <script src="/lib/quill.js"></script>
+        <script type="text/javascript" src="/lib/quill-cursors.js"></script>
         <link href="/lib/quill.snow.css" rel="stylesheet">
 
-        <!-- Include the Quill library -->
-        <script src="/lib/quill.js"></script>
+        <!-- app imports -->
+        <script type="text/javascript" src="/clientConnection.js"></script>
+        <script type="text/javascript" src="/client.js"></script>
 
     </head>
     <body>
+        <!-- shown when the login page is visible -->
         <div id="login">
             <div class="left">
                 <img src="/logo.png">
@@ -39,6 +40,7 @@
             </div>
         </div>
 
+        <!-- shown after the user has logged in -->
         <div id="doc">
             <div id="controls">
                 <input type="button" value="Open File" id="open-button">
@@ -49,10 +51,8 @@
                 <input type="button" value="Share" id="share-button" hidden>
                 <input type="button" value="Rename" id="rename-button" hidden>
             </div>
-            <!-- <div id="editor" contenteditable> -->
             <div id="document-title" data-document-id=""></div>
-            <div id="editor" >
-            </div>
+            <div id="editor"></div>
         </div>
     </body>
 </html>
