@@ -40,7 +40,7 @@ let Client = function(masterServer, socket) {
 
     // fires every time we get data from the slave
     self.slave.on('message', function(incoming) {
-        console.log('[slave<<]', incoming);
+        console.log('[master<<slave]', incoming);
         switch (incoming.action) {
             // SLAVE TO MASTER MESSAGES
             case 'SlaveReady':
@@ -121,7 +121,7 @@ let Client = function(masterServer, socket) {
                             action: 'document_already_open',
                             crdt: Automerge.save(client.crdt),
                             originalRequest: incoming,
-                            document_id: client.document_id,
+                            document_id: incoming.document_id,
                             document_share_id: client.document_share_id,
                             title: client.document_title,
                             ownr: client.document_owner
@@ -186,12 +186,12 @@ let Client = function(masterServer, socket) {
                 for (let client of self.masterServer.clients) {
                     if (client.document === self.document) {
                         client.crdt = Automerge.applyChanges(client.crdt, changes);
-                        if (client._thisClient !== self._thisClient) {
+                        // if (client._thisClient !== self._thisClient) {
                             client.slave.send({
                                 action: 'update_document',
                                 content: client.crdt.text.join('')
                             });
-                        }
+                        // }
                     }
                 }
 
@@ -220,12 +220,12 @@ let Client = function(masterServer, socket) {
                 for (let client of self.masterServer.clients) {
                     if (client.document === self.document) {
                         client.crdt = Automerge.applyChanges(client.crdt, changes2);
-                        if (client._thisClient !== self._thisClient) {
+                        // if (client._thisClient !== self._thisClient) {
                             client.slave.send({
                                 action: 'update_document',
                                 content: client.crdt.text.join('')
                             });
-                        }
+                        // }
                     }
                 }
 

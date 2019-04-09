@@ -19,9 +19,22 @@ let client_id = null; // the connected client's ID
 AWS.config.update(awsConf.aws);
 let docClient = new AWS.DynamoDB.DocumentClient();
 
+/**
+ * Send data to a client
+ * @function sendToClient
+ * @private
+ * @param {*} data - the unserialized data to send
+ */
+function sendToClient(msg) {
+    if (msg.action !== 'pong') {
+        console.log('[slave>>client]', msg);
+    }
+    socket.send(JSON.stringify(msg));
+}
+
 // fires on every message from the master that controls this slave
 process.on('message', (incoming) => {
-    console.log('master>slave', incoming);
+    console.log('[master>>slave]', incoming);
 
     switch(incoming.action) {
         // MASTER TO SLAVE MESSAGES
@@ -35,7 +48,7 @@ process.on('message', (incoming) => {
             */
 
             // forward this as-is to the client
-            socket.send(JSON.stringify(incoming));
+            sendToClient(incoming);
             break;
         case 'actually_open_document':
             /*  Sent when the client has requested to open a document and no other clients have it open already
@@ -68,21 +81,21 @@ process.on('message', (incoming) => {
                     });
 
                     // send the client the document
-                    socket.send(JSON.stringify({
+                    sendToClient({
                         action: 'load_document',
                         document_id: doc.Item.DocID,
                         document_share_id: doc.Item.DocShareID,
                         title: doc.Item.title,
                         owner: doc.Item.ownr,
                         content: crdt.text.join('')
-                    }));
+                    });
                 } else {
                     // the document ID is not in the db
-                    socket.send(JSON.stringify({
+                    sendToClient({
                         action: 'dialog',
                         title: 'Document not found!',
                         content: 'The document you were looking for could not be located.'
-                    }));
+                    });
                 }
             });
             break;
@@ -104,14 +117,14 @@ process.on('message', (incoming) => {
             */
 
             // send the document to the client
-            socket.send(JSON.stringify({
+            sendToClient({
                 action: 'load_document',
                 document_id: incoming.document_id,
                 document_share_id: incoming.document_share_id,
                 title: incoming.title,
                 owner: incoming.ownr,
                 content: Automerge.load(incoming.crdt).text.join('')
-            }));
+            });
             break;
         case 'update_document':
             /* Sent when the document has been updated
@@ -122,7 +135,7 @@ process.on('message', (incoming) => {
             */
 
             // just forward this to the client
-            socket.send(JSON.stringify(incoming));
+            sendToClient(incoming);
             break;
         case 'update_cursor':
             /* Sent when a client (not this client) had a cursor update
@@ -135,7 +148,7 @@ process.on('message', (incoming) => {
             */
 
             // just forward this to the client
-            socket.send(JSON.stringify(incoming));
+            sendToClient(incoming);
             break;
         default:
             console.log('Unknown action', incoming);
@@ -171,7 +184,7 @@ getPort().then(function(port) {
 
             // only log these messages when they're not pings because that gets way too spammy
             if (incoming.action !== 'ping') {
-                console.log(`[client<<]`, incoming);
+                console.log(`[slave<<client]`, incoming);
             }
 
             switch (incoming.action) {
@@ -269,9 +282,9 @@ getPort().then(function(port) {
                             "action": "ping"
                         }
                     */
-                    socket.send(JSON.stringify({
+                    sendToClient({
                         action: 'pong'
-                    }));
+                    });
                     break;
                 default:
                     console.log('unknown action on slave-client socket', incoming.action);
