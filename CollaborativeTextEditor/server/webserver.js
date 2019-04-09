@@ -1,3 +1,8 @@
+/**
+ * @file webserver.js
+ * @overview logic for the primary master's webserver
+ */
+
 const express = require("express");
 const bodyParser = require("body-parser");
 const uuid = require("uuid/v4");
@@ -6,16 +11,30 @@ const Automerge = require("automerge");
 const conf = require('./conf.json');
 
 
+/**
+ * Initialize the webserver
+ * @function init
+ * @memberof webserver
+ * @param {masterServer.MasterServer} self - the server hosting this webserver
+ * @callback callback - a callback taking nothing
+ */
 function init(self, callback) {
+    // initialize the webserver
     self.webServer = express();
+
+    // use POST body middleware
     self.webServer.use(bodyParser.json());
     self.webServer.use(bodyParser.urlencoded({
         extended: true
     }));
+
+    // for the demo console, broadcast a message to all masters
     self.webServer.post('/broadcast', (req, res) => {
         self.broadcastToMasters(req.body.payload);
         res.end("ok");
     });
+
+    // for the demo console, send a message to a specific master
     self.webServer.post('/send', (req, res) => {
         let port = parseInt(req.body.master, 10);
         for (let master of self.masters) {
@@ -25,6 +44,8 @@ function init(self, callback) {
             }
         }
     });
+
+    // for the demo console, crash this master
     self.webServer.post('/crash', (req, res) => {
         res.end("ok");
 
@@ -32,6 +53,8 @@ function init(self, callback) {
             throw new Error('requested crash');
         }, 1);
     });
+
+    // log a user in
     self.webServer.post('/login', (req, res) => {
         if (!req.body.username || !req.body.password) {
             res.status(400).end();
@@ -50,6 +73,8 @@ function init(self, callback) {
                 } else {
                     if (data.Items.length) {
                         if (data.Items[0].password === req.body.password) {
+
+                            // the user is valid, get all documents
                             self.docClient.scan({
                                 TableName: 'documents'
                             }, (err, documents) => {
@@ -57,6 +82,8 @@ function init(self, callback) {
                                     res.status(500).end();
                                 }
                                 let docs = [];
+
+                                // for every document, if the user owns it, send them the metadata
                                 for (let item of documents.Items) {
                                     if (item.ownr === data.Items[0].id) {
                                         docs.push({
@@ -86,12 +113,15 @@ function init(self, callback) {
             });
         }
     });
+
+    // create a new document
     self.webServer.post('/new_document', (req, res) => {
-        // create a new document, assign a master to it, give the client back the slave port
+        // create the document text
         let content = Automerge.change(Automerge.init(), doc => {
             doc.text = new Automerge.Text();
         });
 
+        // document creation
         let doc = {
             DocID: uuid(),
             DocShareID: uuid(),
@@ -99,6 +129,8 @@ function init(self, callback) {
             ownr: req.body.client_id,
             content: Automerge.save(content)
         };
+
+        // put the document into the database
         self.docClient.put({
             TableName: 'documents',
             Item: doc
@@ -107,6 +139,8 @@ function init(self, callback) {
                 res.status(500).end();
                 throw err;
             } else {
+                // get a master that can handle this new document and then send it's information to the
+                // client
                 let mmPort = self.getBalancedMaster();
                 self.masterDocuments[mmPort] = self.masterDocuments[mmPort] || [];
                 self.masterDocuments[mmPort].push(doc.DocID);
@@ -121,8 +155,11 @@ function init(self, callback) {
             }
         });
     });
+
+    // open an existing document
     self.webServer.post('/open_document', (req, res) => {
         let mmPort = null;
+        // check if the document has been opened in a master before
         for (let port in self.masterDocuments) {
             if (self.masterDocuments[port].indexOf(req.body.document_id) !== -1) {
                 console.log('Master exists to handle doc', port);
@@ -131,9 +168,9 @@ function init(self, callback) {
             }
         }
 
+        // no master has this document yet - get the lowest load one
         if (mmPort === null) {
             mmPort = self.getBalancedMaster();
-            console.log('Balanced master', mmPort, self.masterClientPorts);
             self.masterDocuments[mmPort] = self.masterDocuments[mmPort] || [];
             self.masterDocuments[mmPort].push(req.body.document_id);
         }
@@ -146,8 +183,11 @@ function init(self, callback) {
             }
         }));
     });
+
+    // server static files through the client directory
     self.webServer.use(express.static('../client/'));
 
+    // attempt to start listening on the webserver client port
     let attempts = 0;
     function tryListen() {
         self.webServer.listen({
@@ -173,6 +213,9 @@ function init(self, callback) {
     tryListen();
 };
 
+/**
+ * @namespace webserver
+ */
 module.exports = {
     init: init
 };
