@@ -22,7 +22,7 @@
 
 ### To launch a non-primary master server
 * cd into CPSC559_DistributedProject/CollaborativeTextEditor/server
-* $node server.js --action join --peers masterPort
+* $node server.js --action join --peers masterPort,masterPort
 
 
 ### Site URL
