@@ -22,12 +22,18 @@
 
 ### To launch a non-primary master server
 * cd into CPSC559_DistributedProject/CollaborativeTextEditor/server
-* $node server.js --action join --peers masterPort,masterPort
-
+```
+    $ node server.js --action join --peers masterPort,masterPort
+```
 
 ### Site URL
 * http://35.175.192.161:8888/
 
+### Server Access
+* The application is currently deployed on an EC2 instance at 35.175.192.161. If accessing this server is desireable, it can be accessed via SSH. The password is `typeit`:
+```
+    $ ssh ubuntu@35.175.192.161
+```
 
 ### Login credentials
 * We have three users:
