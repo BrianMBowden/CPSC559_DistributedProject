@@ -15,8 +15,19 @@
 * cd into CPSC559_DistributedProject/CollaborativeTextEditor/server
 * $node server.js --action startup
 
+### Change number of required master servers at startup
+* Open conf.json in some text editor
+* Change "minMasters": to desired value
+
+
 ### To launch a non-primary master server
+* cd into CPSC559_DistributedProject/CollaborativeTextEditor/server
 * $node server.js --action join --peers masterPort
+
+
+### Site URL
+* http://35.175.192.161:8888/
+
 
 ### Login credentials
 * We have three users:
